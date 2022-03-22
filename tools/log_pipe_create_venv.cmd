@@ -41,7 +41,7 @@ pushd %OLDHOME_FOLDER%
 rem ++++++++++++++++++++++++++++++++++++++++++++++++
 rem &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
-SET PROJECT_NAME=ANTISTASI_LOGBOOK
+SET PROJECT_NAME=ANTISTASI_SQF_TOOLS
 
 rem -------------------------------------------------
 
