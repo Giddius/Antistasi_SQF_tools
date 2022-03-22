@@ -1,0 +1,5 @@
+Cython>=0.29.28
+peewee>=3.14.8
+sortedcontainers>=2.4.0
+frozendict==2.3.0
+peewee>=3.14.8
