@@ -1,0 +1,2 @@
+@Echo off
+SETLOCAL EnableDelayedExpansion
