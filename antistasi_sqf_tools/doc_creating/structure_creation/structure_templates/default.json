@@ -1,5 +1,4 @@
 {
     "folder": ["source", "source/missions", "source/missions/categories"],
-    "files": [],
-    "scripts": [{ "name": "build.cmd", "path": "source/build.cmd" }]
+    "files": [{ "name": "build.cmd", "path": "source/build.cmd" }]
 }

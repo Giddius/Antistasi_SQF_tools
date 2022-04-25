@@ -19,8 +19,8 @@ sys.path.insert(0, os.path.abspath('.'))
 # -- Project information -----------------------------------------------------
 
 project = 'Antistasi'
-copyright = '2022, Official AntiStasi Community'
-author = 'Official AntiStasi Community'
+copyright = '2022, Official Antistasi Community'
+author = 'Official Antistasi Community'
 
 # The full version, including alpha/beta/rc tags
 release = '2.5.3'
@@ -31,17 +31,17 @@ release = '2.5.3'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["myst_parser", 'sphinxcontrib.mermaid', 'rst2pdf.pdfbuilder']
+extensions = ["myst_parser", 'sphinxcontrib.mermaid', 'sphinxcontrib.images']
 pdf_documents = [('index', 'rst2pdf', 'Sample rst2pdf doc', 'Your Name'), ]
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
-mermaid_output_format = "png"
-mermaid_cmd = r"C:\Users\Giddi\AppData\Roaming\npm\mmdc.cmd"
+
+
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
-
+mermaid_params = ['--theme', 'forest', '--width', '2000', '--backgroundColor', 'transparent']
 
 # -- Options for HTML output -------------------------------------------------
 

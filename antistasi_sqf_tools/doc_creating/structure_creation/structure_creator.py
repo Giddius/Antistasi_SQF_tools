@@ -53,7 +53,7 @@ from importlib.machinery import SourceFileLoader
 
 from gidapptools.general_helper.string_helper import StringCase, StringCaseConverter, remove_chars
 from gidapptools.general_helper.path_helper import open_folder_in_explorer
-from antistasi_sqf_tools.doc_creating.structure_creation.script_templates import SCRIPT_TEMPLATES_FOLDER, get_script_template
+from antistasi_sqf_tools.doc_creating.structure_creation.file_templates import FILE_TEMPLATES_FOLDER, get_file_template, FileTemplate
 from antistasi_sqf_tools.doc_creating.structure_creation.structure_templates import STRUCTURE_TEMPLATES_FOLDER, get_structure_template, StructureTemplate
 import pp
 # endregion[Imports]
@@ -81,6 +81,7 @@ class StructureCreator:
         self._parent_dir = Path(parent_dir).resolve()
         self._project_name = project_name
         self._structure_template = structure_template
+        self._temp_base_folder: Path = None
 
     @property
     def render_kwargs(self) -> dict[str, Any]:
@@ -106,23 +107,27 @@ class StructureCreator:
     def base_folder(self) -> Path:
         return self._parent_dir.joinpath(self.safe_project_name)
 
-    def create_folders(self):
-        self.base_folder.mkdir(exist_ok=True)
+    def _create_folders(self):
+        self._temp_base_folder.mkdir(parents=True, exist_ok=True)
         for sub_path in self._structure_template.folder:
-            self.base_folder.joinpath(sub_path).resolve().mkdir(parents=True, exist_ok=True)
+            self._temp_base_folder.joinpath(sub_path).resolve().mkdir(parents=True, exist_ok=True)
 
-    def create_files(self):
-        ...
+    def _create_files(self):
+        for file in self._structure_template.files:
+            file.render(self)
 
-    def create_scripts(self):
-        for script in self._structure_template.scripts:
-            script.render(self)
+    def _copy_to_parent_dir(self) -> None:
+        shutil.move(self._temp_base_folder, self.parent_dir)
 
     def create(self):
-        self.create_folders()
-        self.create_files()
-        self.create_scripts()
-        open_folder_in_explorer(self.base_folder)
+        with TemporaryDirectory() as temp_dir:
+            self._temp_base_folder = Path(temp_dir).joinpath(self.base_folder.name).resolve()
+            self._create_folders()
+            self._create_files()
+            self._copy_to_parent_dir()
+
+        open_folder_in_explorer(self.parent_dir)
+
 
         # region[Main_Exec]
 if __name__ == '__main__':

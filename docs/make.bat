@@ -32,4 +32,5 @@ goto end
 %SPHINXBUILD% -M help %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O%
 
 :end
+call firefox file://%~dp0%BUILDDIR%/%1/index.html
 popd

@@ -11,11 +11,12 @@ Welcome to Antistasi's documentation!
    :alt: Alternative text
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
    :caption: Contents:
 
-   raw_files/description
-   raw_files/mission_table
+   /raw_files/description
+   /raw_files/missions/missions_main
+
 
 Indices and tables
 ==================
