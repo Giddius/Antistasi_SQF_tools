@@ -11,15 +11,21 @@ readme = "README.md"
 dynamic = ['version', 'description']
 requires-python = ">=3.9"
 dependencies = [
-    "sphinx>=4.5.0",
-    "gidapptools[rich]>=0.2.9"
+    "sphinx==4.5.0",
+    "sphinxcontrib-mermaid==0.7.1",
+    "sphinxcontrib-images==0.9.4",
+    "sphinx-bootstrap-theme==0.8.1",
+    "myst-parser==0.17.2",
+    "sphinx-copybutton==0.5.0",
+    "gidapptools~=0.3.0",
+    "click~=8.1.0",
 ]
 
 [project.urls]
 Source = "https://github.com/Giddius/Antistasi_Logbook"
 
 [project.scripts]
-
+antistasi-sqf-tools = "antistasi_sqf_tools.__main__:antistasi_sqf_tools_cli"
 
 [project.optional-dependencies]
 
@@ -41,7 +47,7 @@ exclude = [
     ".favorites.json",
     ".venv",
     ".pytest_cache",
-    "__pycache__"
+    "__pycache__",
 ]
 
 [tool.autopep8]
@@ -85,8 +91,6 @@ remove_unused_variables = false
 ignore_init_module_imports = false
 
 [tool.gid_tasks.imports_cleaner]
-exclude_globs = [
-
-]
+exclude_globs = []
 exclude_init_files = true
 ignore_missing_import_section = true
