@@ -22,6 +22,7 @@ from tempfile import TemporaryDirectory
 from antistasi_sqf_tools.doc_creating.config_handling import find_config_file, DocCreationConfig
 from sphinx.cmd.build import main as sphinx_build
 import click
+import json
 # endregion[Imports]
 
 # region [TODO]
@@ -117,8 +118,8 @@ class Creator:
                 label_list = self._get_all_labels(temp_build_dir)
                 shutil.rmtree(output_dir)
                 shutil.copytree(temp_build_dir / self.builder_name, output_dir, dirs_exist_ok=True)
-                with output_dir.joinpath("available_label.txt").open("w", encoding='utf-8', errors='ignore') as f:
-                    f.write('\n'.join(f"- {l}" for l in label_list))
+                with output_dir.joinpath("available_label.json").open("w", encoding='utf-8', errors='ignore') as f:
+                    json.dump(label_list, f, indent=4, sort_keys=False, default=str)
         self.post_build(output_dir.joinpath("index.html"))
 
     def release(self):
