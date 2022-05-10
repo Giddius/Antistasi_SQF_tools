@@ -67,6 +67,12 @@ class DocCreationConfig(ConfigParser):
         self.folder = self.path.parent
         self.read(self.path, encoding="utf-8")
 
+    def get_local_options(self) -> dict[str, Any]:
+        section_name = "local"
+        _out = {"auto_open": self.getboolean(section_name, "auto_open", fallback=False),
+                "browser_for_html": self.get(section_name, "browser_for_html", fallback="firefox")}
+        return _out
+
     def get_source_dir(self, creator: "Creator") -> Path:
         section = f"building_{creator.builder_name.casefold()}" if creator.builder_name is not None else "building"
         key = "source_dir"
@@ -106,6 +112,10 @@ class DocCreationConfig(ConfigParser):
 
     def get_release_builder_name(self) -> str:
         return self.get("release", "builder_name", fallback="html")
+
+    def __repr__(self) -> str:
+
+        return f'{self.__class__.__name__}(file_path={self.path.as_posix()!r})'
 
 
 # region[Main_Exec]
