@@ -90,12 +90,20 @@ class Creator:
 
     def _get_all_labels(self, build_dir: Path) -> tuple[str]:
         def _labels_sort_key(in_label: str):
+
             if ":" in in_label:
-                file_part, section_part = in_label.split(":")
+                file, section = in_label.split(":")
             else:
-                file_part = in_label
-                section_part = ""
-            return file_part, len(file_part), section_part
+                file = in_label
+                section = ""
+
+            file_parts = file.split("/")
+            _out = []
+            for part in file_parts:
+                _out.append(part)
+                _out.append(len(part))
+            _out.append(section)
+            return tuple(_out)
 
         env_pickle_file = next(build_dir.glob("**/environment.pickle"))
         with env_pickle_file.open("rb") as f:
