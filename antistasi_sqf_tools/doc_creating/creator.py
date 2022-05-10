@@ -96,7 +96,7 @@ class Creator:
                 section_part = ""
             return file_part, len(file_part), section_part
 
-        env_pickle_file = build_dir.glob("**/environment.pickle")[0]
+        env_pickle_file = next(build_dir.glob("**/environment.pickle"))
         with env_pickle_file.open("rb") as f:
             dat = pickle.load(f)
         raw_labels = set(dat.domaindata['std']['labels'].keys())
