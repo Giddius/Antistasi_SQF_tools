@@ -96,7 +96,7 @@ class Creator:
                 section_part = ""
             return file_part, len(file_part), section_part
 
-        env_pickle_file = next(build_dir.glob("**/environment.pickle"))
+        env_pickle_file = build_dir.glob("**/environment.pickle")[0]
         with env_pickle_file.open("rb") as f:
             dat = pickle.load(f)
         raw_labels = set(dat.domaindata['std']['labels'].keys())
@@ -114,7 +114,7 @@ class Creator:
             with StdOutModifier() as mod_std_out:
                 returned_code = sphinx_build(args)
             if returned_code == 0:
-                label_list = self._get_all_labels(output_dir)
+                label_list = self._get_all_labels(temp_build_dir)
                 shutil.rmtree(output_dir)
                 shutil.copytree(temp_build_dir / self.builder_name, output_dir, dirs_exist_ok=True)
                 with output_dir.joinpath("available_label.txt").open("w", encoding='utf-8', errors='ignore') as f:
