@@ -22,6 +22,7 @@ from tempfile import TemporaryDirectory
 from antistasi_sqf_tools.doc_creating.config_handling import find_config_file, DocCreationConfig
 from sphinx.cmd.build import main as sphinx_build
 import click
+from antistasi_sqf_tools.doc_creating.env_handling import EnvManager
 import json
 # endregion[Imports]
 
@@ -59,18 +60,41 @@ class StdOutModifier:
         sys.stdout = self.__class__.originial_std_out
 
 
+def _each_part_alphabetical_length(in_label: str):
+
+    if ":" in in_label:
+        file, section = in_label.split(":")
+    else:
+        file = in_label
+        section = ""
+
+    file_parts = file.split("/")
+    _out = []
+    for part in file_parts:
+        _out.append(part)
+        _out.append(len(part))
+    _out.append(section)
+    return tuple(_out)
+
+
+LABEL_SORT_KEY_FUNCTIONS = {'parts-alphabetical-length': _each_part_alphabetical_length}
+
+
 class Creator:
+    label_sort_key = LABEL_SORT_KEY_FUNCTIONS["parts-alphabetical-length"]
+    env_manager = EnvManager()
 
     def __init__(self, config_file: Union[str, os.PathLike], builder_name: str, base_folder: Union[str, os.PathLike] = None) -> None:
         self.builder_name = builder_name
         self.base_folder = Path(config_file).resolve().parent if base_folder is None else Path(base_folder).resolve()
         self.config = DocCreationConfig(config_file)
+        self.env_manager.add_config_path(self.config.path)
         self.is_release = False
         if self.builder_name == "release":
             self.is_release = True
             self.builder_name = self.config.get_release_builder_name()
 
-    def post_build(self, file: Path):
+    def post_build(self):
 
         def open_in_browser(browser_name: str, file_path: Path):
             browser_name = browser_name.strip().casefold()
@@ -82,39 +106,28 @@ class Creator:
 
             args.append(file_path.resolve().as_uri())
 
-            proc = subprocess.Popen(args)
+            proc = subprocess.run(args, text=True, capture_output=True, start_new_session=True, check=False)
+            if proc.stderr:
+                print(proc.stderr)
 
-        local_options = self.config.get_local_options()
-        if local_options["auto_open"] is True:
-            open_in_browser(local_options["browser_for_html"], file)
+        if self.config.local_options["auto_open"] is True:
+            open_in_browser(self.config.local_options["browser_for_html"], self.config.get_output_dir(self).joinpath("index.html"))
+
+    def pre_build(self) -> None:
+        self.env_manager.load_env_file(self.config.local_options["env_file_to_load"])
 
     def _get_all_labels(self, build_dir: Path) -> tuple[str]:
-        def _labels_sort_key(in_label: str):
-
-            if ":" in in_label:
-                file, section = in_label.split(":")
-            else:
-                file = in_label
-                section = ""
-
-            file_parts = file.split("/")
-            _out = []
-            for part in file_parts:
-                _out.append(part)
-                _out.append(len(part))
-            _out.append(section)
-            return tuple(_out)
-
         env_pickle_file = next(build_dir.glob("**/environment.pickle"))
         with env_pickle_file.open("rb") as f:
             dat = pickle.load(f)
         raw_labels = set(dat.domaindata['std']['labels'].keys())
-        return tuple(sorted(raw_labels, key=_labels_sort_key))
+        return tuple(sorted(raw_labels, key=self.label_sort_key))
 
     def build(self):
         if self.is_release is True:
             return self.release()
 
+        self.pre_build()
         output_dir = self.config.get_output_dir(self)
         output_dir.mkdir(parents=True, exist_ok=True)
         with TemporaryDirectory() as temp_dir:
@@ -128,7 +141,7 @@ class Creator:
                 shutil.copytree(temp_build_dir / self.builder_name, output_dir, dirs_exist_ok=True)
                 with output_dir.joinpath("available_label.json").open("w", encoding='utf-8', errors='ignore') as f:
                     json.dump(label_list, f, indent=4, sort_keys=False, default=str)
-        self.post_build(output_dir.joinpath("index.html"))
+        self.post_build()
 
     def release(self):
         output_dir = self.config.get_release_output_dir()

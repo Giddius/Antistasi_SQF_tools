@@ -50,10 +50,8 @@ from urllib.parse import urlparse
 from importlib.util import find_spec, module_from_spec, spec_from_file_location
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from importlib.machinery import SourceFileLoader
-import pp
-import pyparsing as ppa
-from pyparsing.common import pyparsing_common as ppc
-import string
+from dotenv.main import DotEnv
+
 # endregion[Imports]
 
 # region [TODO]
@@ -71,55 +69,46 @@ import string
 THIS_FILE_DIR = Path(__file__).parent.absolute()
 
 # endregion[Constants]
-unicodePrintables = ''.join(chr(c) for c in range(sys.maxunicode) if not chr(c).isspace())
 
 
-def get_header_grammar() -> ppa.ParserElement:
-    text_chars = ''.join(char for char in ppa.unicode.Latin1.printables if char not in {" ", "\t", "\n", "\r"})
-    key = ppa.line_start + ppa.Word(ppa.alphas) + ppa.Literal(":").suppress()
-    text = ppa.ZeroOrMore(ppa.Word(text_chars), stop_on=key)
-    value = ppa.IndentedBlock(text, recursive=True)
+class EnvNames(Enum):
+    CONFIG_PATH = ("_DOC_CREATION_CONFIG_PATH", str)
 
-    return ppa.Group(key + value)
+    @property
+    def var_name(self) -> str:
+        return self.value[0]
 
+    @property
+    def conversion_func(self) -> Callable:
+        return self.value[1]
 
-HEADER_GRAMMAR = get_header_grammar()
-
-HEADER_REGEX = re.compile(r"/\*(?P<text>.*?)\*/", re.DOTALL)
-
-CATEGORY_REGEX = re.compile(r"(?P<cat>^\w.*)\:", re.MULTILINE)
-
-
-def find_all_split_indexes(in_text: str) -> tuple[int]:
-    return [m.start("cat") for m in CATEGORY_REGEX.finditer(in_text)]
+    def __str__(self) -> str:
+        return str(self.value[0])
 
 
-def header_split(in_text: str):
+class EnvManager:
 
-    _out = {}
-    all_split_indexes = find_all_split_indexes(in_text)
+    def __init__(self, env_names: type[Enum] = EnvNames) -> None:
+        self.env_names = env_names
+        self.loaded_env_files = {}
 
-    split_text = [in_text[i:j] for i, j in zip(all_split_indexes, all_split_indexes[1:] + [None])]
-    for sub_text in split_text:
-        key, value = sub_text.split(":", maxsplit=1)
-        _out[key.strip().casefold()] = dedent('\n'.join(i for i in value.splitlines() if i.strip()))
+    @property
+    def all_env_names(self) -> Mapping[str, str]:
+        return {k: v.var_name for k, v in self.env_names.__members__.items()}
 
-    return _out
+    def add_config_path(self, config_path: Path) -> None:
+        os.environ[self.env_names.CONFIG_PATH.var_name] = self.env_names.CONFIG_PATH.conversion_func(config_path)
 
-
-def get_header(in_file: Path):
-    header_match = HEADER_REGEX.match(in_file.read_text(encoding='utf-8', errors='ignore').strip())
-    if header_match:
-        category_names = []
-        text = header_match.group("text")
-        cleaned_text = dedent(text.lstrip("\n"))
-        res = header_split(cleaned_text)
-        return res
+    def load_env_file(self, env_file_path: Path) -> None:
+        if env_file_path.is_file() is False:
+            return {}
+        dot_env = DotEnv(env_file_path)
+        dot_env.set_as_environment_variables()
+        self.loaded_env_files[env_file_path] = dot_env.dict()
 
 
-# region[Main_Exec]
+    # region[Main_Exec]
 if __name__ == '__main__':
-    test_file = Path(r"D:\Dropbox\hobby\Modding\Programs\Github\Foreign_Repos\A3-Antistasi\A3A\addons\core\vcomai\Functions\VCM_Functions\fn_Classname.sqf")
-    pp(get_header(test_file))
+    pass
 
 # endregion[Main_Exec]

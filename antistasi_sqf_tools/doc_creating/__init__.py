@@ -15,6 +15,14 @@ def add_doc_sub_group(top_group: click.Group):
     def docs_cli():
         ...
 
+    @docs_cli.command(name="list-added-env")
+    @click.help_option("-h", "--help")
+    def list_added_env():
+        from antistasi_sqf_tools.doc_creating.env_handling import EnvManager
+        env_manager = EnvManager()
+        for name, var_name in env_manager.all_env_names.items():
+            click.echo(f"{name:<15} --> {var_name!r:>30}")
+
     @docs_cli.command(name="sphinx-build")
     @click.help_option("-h", "--help")
     @click.option("-M", "--Make", is_flag=True)
@@ -49,3 +57,4 @@ def add_doc_sub_group(top_group: click.Group):
         builder = builder or "html"
         creator = Creator(config_file=config_file, builder_name=builder.casefold())
         creator.build()
+        click.echo(('-' * 25) + "DONE" + ('-' * 25))

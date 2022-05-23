@@ -10,7 +10,7 @@ import os
 
 
 from pathlib import Path
-
+from functools import cached_property
 from typing import TYPE_CHECKING, Union, Callable, Iterable, Optional, Mapping, Any, IO, TextIO, BinaryIO, Hashable, Generator, Literal, TypeVar, TypedDict, AnyStr
 
 from configparser import ConfigParser, NoOptionError, NoSectionError
@@ -67,10 +67,15 @@ class DocCreationConfig(ConfigParser):
         self.folder = self.path.parent
         self.read(self.path, encoding="utf-8")
 
+    @cached_property
+    def local_options(self) -> dict[str, Any]:
+        return self.get_local_options()
+
     def get_local_options(self) -> dict[str, Any]:
         section_name = "local"
         _out = {"auto_open": self.getboolean(section_name, "auto_open", fallback=False),
-                "browser_for_html": self.get(section_name, "browser_for_html", fallback="firefox")}
+                "browser_for_html": self.get(section_name, "browser_for_html", fallback="firefox"),
+                "env_file_to_load": self.get_env_file_to_load()}
         return _out
 
     def get_source_dir(self, creator: "Creator") -> Path:
@@ -112,6 +117,10 @@ class DocCreationConfig(ConfigParser):
 
     def get_release_builder_name(self) -> str:
         return self.get("release", "builder_name", fallback="html")
+
+    def get_env_file_to_load(self) -> Path:
+        rel_path = self.get("local", "env_file_to_load", fallback=".env")
+        return self.path.joinpath(rel_path)
 
     def __repr__(self) -> str:
 
