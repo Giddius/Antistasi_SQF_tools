@@ -81,7 +81,7 @@ LABEL_SORT_KEY_FUNCTIONS = {'parts-alphabetical-length': _each_part_alphabetical
 
 
 class Creator:
-    label_sort_key = LABEL_SORT_KEY_FUNCTIONS["parts-alphabetical-length"]
+    label_sort_key = "parts-alphabetical-length"
     env_manager = EnvManager()
 
     def __init__(self, config_file: Union[str, os.PathLike], builder_name: str, base_folder: Union[str, os.PathLike] = None) -> None:
@@ -121,7 +121,7 @@ class Creator:
         with env_pickle_file.open("rb") as f:
             dat = pickle.load(f)
         raw_labels = set(dat.domaindata['std']['labels'].keys())
-        return tuple(sorted(raw_labels, key=self.label_sort_key))
+        return tuple(sorted(raw_labels, key=LABEL_SORT_KEY_FUNCTIONS[self.label_sort_key]))
 
     def build(self):
         if self.is_release is True:
