@@ -6,12 +6,15 @@ Soon.
 
 # region [Imports]
 
-
+# * Standard Library Imports ---------------------------------------------------------------------------->
 from pathlib import Path
 
-
+# * Third Party Imports --------------------------------------------------------------------------------->
 import click
+
+# * Local Imports --------------------------------------------------------------------------------------->
 from antistasi_sqf_tools.doc_creating import add_doc_sub_group
+
 # endregion[Imports]
 
 # region [TODO]

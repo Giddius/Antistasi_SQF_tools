@@ -4,6 +4,8 @@ from sphinx.cmd.build import main as sphinx_build
 import os
 from antistasi_sqf_tools.doc_creating.config_handling import find_config_file, CONFIG_FILE_NAME
 from antistasi_sqf_tools.doc_creating.creator import Creator
+from antistasi_sqf_tools import CONSOLE
+from rich.table import Table
 THIS_FILE_DIR = Path(__file__).parent.absolute()
 
 CLI_FILE_PATH_TYPUS = click.Path(exists=True, file_okay=True, dir_okay=False, resolve_path=True, path_type=Path)
@@ -20,8 +22,14 @@ def add_doc_sub_group(top_group: click.Group):
     def list_added_env():
         from antistasi_sqf_tools.doc_creating.env_handling import EnvManager
         env_manager = EnvManager()
+        table = Table(title="All added ENV-Vars", title_style="bold bright_white")
+        table.add_column("Name", style="gold3", header_style="bold italic cyan")
+        table.add_column("Var Name", style="grey89", header_style="bold italic cyan")
         for name, var_name in env_manager.all_env_names.items():
-            click.echo(f"{name:<15} --> {var_name!r:>30}")
+            table.add_row(f"[b u]{name}[/b u]", var_name)
+        CONSOLE.rule(style="bold bright_white")
+        CONSOLE.print(table)
+        CONSOLE.rule(style="bold bright_white")
 
     @docs_cli.command(name="sphinx-build")
     @click.help_option("-h", "--help")
@@ -57,4 +65,6 @@ def add_doc_sub_group(top_group: click.Group):
         builder = builder or "html"
         creator = Creator(config_file=config_file, builder_name=builder.casefold())
         creator.build()
-        click.echo(('-' * 25) + "DONE" + ('-' * 25))
+        CONSOLE.rule(style="bold bright_white")
+        CONSOLE.rule(title="DONE", style="bold bright_green")
+        CONSOLE.rule(style="bold bright_white")

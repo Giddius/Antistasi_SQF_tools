@@ -6,15 +6,14 @@ Soon.
 
 # region [Imports]
 
+# * Standard Library Imports ---------------------------------------------------------------------------->
 import os
-
-
+from typing import TYPE_CHECKING, Any, Union, Optional
 from pathlib import Path
 from functools import cached_property
-from typing import TYPE_CHECKING, Union, Callable, Iterable, Optional, Mapping, Any, IO, TextIO, BinaryIO, Hashable, Generator, Literal, TypeVar, TypedDict, AnyStr
-
 from configparser import ConfigParser, NoOptionError, NoSectionError
 
+# * Type-Checking Imports --------------------------------------------------------------------------------->
 if TYPE_CHECKING:
     from antistasi_sqf_tools.doc_creating.creator import Creator
 
