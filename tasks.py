@@ -134,7 +134,7 @@ def increment_version(increment_part="patch"):
 
     new_parts = parts.copy() | {increment_part: (parts[increment_part] + 1)}
     new_version_string = '.'.join(str(i) for i in new_parts.values())
-    new_text = version_regex.sub(f'__version__ = ' + '"' + new_version_string + '"', file_text, count=1)
+    new_text = version_regex.sub('__version__ = ' + '"' + new_version_string + '"', file_text, count=1)
     version_file.write_text(new_text, encoding='utf-8', errors='ignore')
     return new_version_string
 
@@ -157,15 +157,20 @@ def push_all(commit_message: str, c=None):
 
 @task
 def publish(c, typus="patch"):
-    compile_reqs(c)
-    version_string = increment_version(increment_part=typus)
+    old_cwd = Path.cwd().resolve()
+    try:
+        os.chdir(PYPROJECT_TOML_FILE_PATH.parent)
+        compile_reqs(c)
+        version_string = increment_version(increment_part=typus)
 
-    message_table = {"patch": "{version} Small Update and Bugfixes",
-                     "minor": "{version} Small Feature Update",
-                     "major": "{version} Major Release!"}
-    push_all(commit_message=message_table.get(typus).format(version=version_string), c=c)
-    activator_run(c, "flit publish", echo=True)
-    print("\n")
-    print("-" * 20)
-    print("DONE!")
-    print("-" * 20)
+        message_table = {"patch": "{version} Small Update and Bugfixes",
+                         "minor": "{version} Small Feature Update",
+                         "major": "{version} Major Release!"}
+        push_all(commit_message=message_table.get(typus).format(version=version_string), c=c)
+        activator_run(c, "flit publish", echo=True)
+        print("\n")
+        print("-" * 20)
+        print("DONE!")
+        print("-" * 20)
+    finally:
+        os.chdir(old_cwd)
