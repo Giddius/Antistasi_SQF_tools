@@ -87,12 +87,13 @@ class Creator:
     def __init__(self, config_file: Union[str, os.PathLike], builder_name: str, base_folder: Union[str, os.PathLike] = None) -> None:
         self.builder_name = builder_name
         self.base_folder = Path(config_file).resolve().parent if base_folder is None else Path(base_folder).resolve()
-        self.config = DocCreationConfig(config_file)
-        self.env_manager.add_config_path(self.config.path)
+        self.config = DocCreationConfig(config_file, env_manager=self.env_manager).setup()
+
         self.is_release = False
         if self.builder_name == "release":
             self.is_release = True
             self.builder_name = self.config.get_release_builder_name()
+        self.env_manager.set_env("IS_RELEASE", self.is_release)
 
     def post_build(self):
 
@@ -114,6 +115,7 @@ class Creator:
             open_in_browser(self.config.local_options["browser_for_html"], self.config.get_output_dir(self).joinpath("index.html"))
 
     def pre_build(self) -> None:
+        print(f"loading env-file {self.config.local_options['env_file_to_load']!s}")
         self.env_manager.load_env_file(self.config.local_options["env_file_to_load"])
 
     def _get_all_labels(self, build_dir: Path) -> tuple[str]:

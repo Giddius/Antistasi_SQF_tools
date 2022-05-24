@@ -22,14 +22,16 @@ def add_doc_sub_group(top_group: click.Group):
     def list_added_env():
         from antistasi_sqf_tools.doc_creating.env_handling import EnvManager
         env_manager = EnvManager()
-        table = Table(title="All added ENV-Vars", title_style="bold bright_white")
-        table.add_column("Name", style="gold3", header_style="bold italic cyan")
-        table.add_column("Var Name", style="grey89", header_style="bold italic cyan")
-        for name, var_name in env_manager.all_env_names.items():
-            table.add_row(f"[b u]{name}[/b u]", var_name)
-        CONSOLE.rule(style="bold bright_white")
-        CONSOLE.print(table)
-        CONSOLE.rule(style="bold bright_white")
+        for cat, items in env_manager.all_env_names.items():
+            table = Table(title=cat.verbose_name, title_style="bold bright_white")
+            table.add_column("Name", style="gold3", header_style="bold italic cyan")
+            table.add_column("Var Name", style="grey89", header_style="bold italic cyan")
+            table.add_column("Description", style="grey89", header_style="bold italic magenta")
+
+            for item in items:
+                table.add_row(item.name, item.var_name, item.description)
+
+            CONSOLE.print(table)
 
     @docs_cli.command(name="sphinx-build")
     @click.help_option("-h", "--help")

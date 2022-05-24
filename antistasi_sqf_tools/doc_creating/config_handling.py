@@ -16,7 +16,7 @@ from configparser import ConfigParser, NoOptionError, NoSectionError
 # * Type-Checking Imports --------------------------------------------------------------------------------->
 if TYPE_CHECKING:
     from antistasi_sqf_tools.doc_creating.creator import Creator
-
+    from antistasi_sqf_tools.doc_creating.env_handling import EnvManager
 # endregion[Imports]
 
 # region [TODO]
@@ -60,11 +60,20 @@ def find_config_file(file_name: str, start_dir: Union[str, os.PathLike] = None) 
 
 class DocCreationConfig(ConfigParser):
 
-    def __init__(self, file_path: Union[str, os.PathLike]):
+    def __init__(self, file_path: Union[str, os.PathLike], env_manager: "EnvManager"):
         super().__init__()
+        self.env_manager = env_manager
         self.path = Path(file_path).resolve()
         self.folder = self.path.parent
+
+    def setup(self) -> "DocCreationConfig":
         self.read(self.path, encoding="utf-8")
+        self.env_manager.set_env("CONFIG_PATH", self.path)
+        return self
+
+    @property
+    def folder(self) -> Path:
+        return self.path.parent
 
     @cached_property
     def local_options(self) -> dict[str, Any]:
