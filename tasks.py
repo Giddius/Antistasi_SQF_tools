@@ -94,7 +94,7 @@ def compile_reqs(c):
         arguments = [f'"{PYPROJECT_TOML_FILE_PATH!s}"']
 
         full_command = pip_compile_exe + ' ' + ' '.join(options) + ' ' + ' '.join(arguments)
-        activator_run(c, full_command)
+        activator_run(c, full_command, echo=False)
 
         lines = output_file.read_text(encoding='utf-8', errors='ignore').splitlines()
         pyproject = PyprojectTomlFile(PYPROJECT_TOML_FILE_PATH)

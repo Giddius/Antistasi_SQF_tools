@@ -63,13 +63,16 @@ class DocCreationConfig(ConfigParser):
     def __init__(self, file_path: Union[str, os.PathLike], env_manager: "EnvManager"):
         super().__init__()
         self.env_manager = env_manager
-        self.path = Path(file_path).resolve()
-        self.folder = self.path.parent
+        self._path = Path(file_path).resolve()
 
     def setup(self) -> "DocCreationConfig":
         self.read(self.path, encoding="utf-8")
         self.env_manager.set_env("CONFIG_PATH", self.path)
         return self
+
+    @property
+    def path(self) -> Path:
+        return self._path
 
     @property
     def folder(self) -> Path:
