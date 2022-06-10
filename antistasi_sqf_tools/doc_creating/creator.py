@@ -20,7 +20,7 @@ from traceback import format_tb
 import importlib.util
 # * Third Party Imports --------------------------------------------------------------------------------->
 from sphinx.cmd.build import main as sphinx_build
-import pp
+
 # * Local Imports --------------------------------------------------------------------------------------->
 from antistasi_sqf_tools.doc_creating.env_handling import EnvManager
 from antistasi_sqf_tools.doc_creating.config_handling import DocCreationConfig, get_sphinx_config
