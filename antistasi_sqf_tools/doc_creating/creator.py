@@ -123,7 +123,7 @@ class Creator:
         CONSOLE.rule("PRE-LOADING", style="bold")
         CONSOLE.print(f"- Trying to load env-file {self.config.local_options['env_file_to_load'].as_posix()!r}", style="bold")
         self.env_manager.load_env_file(self.config.local_options["env_file_to_load"])
-        if self.config.local_options["preload_external_files"] is True:
+        if self.config.local_options["preload_external_files"] is True or self.is_release is True:
             CONSOLE.print("- Trying to preload files", style="bold")
             sphinx_config = get_sphinx_config(self.config.get_source_dir(self))
             for file in getattr(sphinx_config, "files_to_preload", []):
