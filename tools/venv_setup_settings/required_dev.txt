@@ -2,7 +2,7 @@ autoflake
 autopep8
 cairosvg
 dateparser
-https://github.com/pyinstaller/pyinstaller/tarball/develop
+pyinstaller @ https://github.com/pyinstaller/pyinstaller/tarball/develop
 invoke
 isort
 line_profiler

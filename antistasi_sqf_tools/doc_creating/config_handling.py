@@ -12,7 +12,11 @@ from typing import TYPE_CHECKING, Any, Union, Optional
 from pathlib import Path
 from functools import cached_property
 from configparser import ConfigParser, NoOptionError, NoSectionError
-
+from attrs import define
+from yarl import URL
+import requests
+from types import ModuleType
+import importlib.util
 # * Type-Checking Imports --------------------------------------------------------------------------------->
 if TYPE_CHECKING:
     from antistasi_sqf_tools.doc_creating.creator import Creator
@@ -58,6 +62,13 @@ def find_config_file(file_name: str, start_dir: Union[str, os.PathLike] = None) 
     return find_in_dir(start_dir, last_dir=None)
 
 
+def get_sphinx_config(source_folder: Path) -> ModuleType:
+    spec = importlib.util.spec_from_file_location("conf", source_folder.joinpath("conf.py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 class DocCreationConfig(ConfigParser):
 
     def __init__(self, file_path: Union[str, os.PathLike], env_manager: "EnvManager"):
@@ -86,7 +97,8 @@ class DocCreationConfig(ConfigParser):
         section_name = "local"
         _out = {"auto_open": self.getboolean(section_name, "auto_open", fallback=False),
                 "browser_for_html": self.get(section_name, "browser_for_html", fallback="firefox"),
-                "env_file_to_load": self.get_env_file_to_load()}
+                "env_file_to_load": self.get_env_file_to_load(),
+                "preload_external_files": self.getboolean(section_name, "preload_external_files", fallback=False)}
         return _out
 
     def get_source_dir(self, creator: "Creator") -> Path:
@@ -131,7 +143,7 @@ class DocCreationConfig(ConfigParser):
 
     def get_env_file_to_load(self) -> Path:
         rel_path = self.get("local", "env_file_to_load", fallback=".env")
-        return self.path.joinpath(rel_path)
+        return self.folder.joinpath(rel_path)
 
     def __repr__(self) -> str:
 

@@ -90,7 +90,7 @@ def compile_reqs(c):
         pip_compile_exe = f'"{SCRIPTS_FOLDER.joinpath("pip-compile.exe").resolve()!s}"'
         output_file = THIS_FILE_DIR.joinpath("compiled_reqs.txt")
         output_file.unlink(missing_ok=True)
-        options = ["--no-header", "--no-annotate", "-r", f'-o {output_file.name!s}']
+        options = ["--no-header", "-q", "--no-annotate", "-r", f'-o {output_file.name!s}']
         arguments = [f'"{PYPROJECT_TOML_FILE_PATH!s}"']
 
         full_command = pip_compile_exe + ' ' + ' '.join(options) + ' ' + ' '.join(arguments)

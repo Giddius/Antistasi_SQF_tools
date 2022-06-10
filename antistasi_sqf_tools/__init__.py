@@ -4,7 +4,7 @@ WIP
 """
 
 
-__version__ = "0.4.3"
+__version__ = "0.5.3"
 
 
 from rich.console import Console as RichConsole

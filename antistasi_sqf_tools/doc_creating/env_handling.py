@@ -121,6 +121,7 @@ class EnvManager:
             os.environ[name] = str(value)
 
     def load_env_file(self, env_file_path: Path) -> None:
+
         if env_file_path.is_file() is False:
             return {}
         dot_env = DotEnv(env_file_path)
