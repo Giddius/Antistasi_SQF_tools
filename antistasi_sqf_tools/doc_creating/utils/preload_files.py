@@ -80,6 +80,8 @@ class FileToPreload:
         self.target_name = target_name or self.url.name
         self.content_modification_func = content_modification_func
 
+
+
     @classmethod
     def set_chunk_size(cls, new_chunk_size: int):
         cls.chunk_size = new_chunk_size
@@ -93,7 +95,7 @@ class FileToPreload:
             response.raise_for_status()
             for chunk in response.iter_content(self.chunk_size, decode_unicode=True):
                 content += chunk
-        if self.content_modification_func:
+        if self.content_modification_func is not None:
             content = self.content_modification_func(content)
         return content
 
