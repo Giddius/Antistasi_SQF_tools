@@ -101,6 +101,7 @@ class Creator:
             self.is_release = True
             self.builder_name = self.config.get_release_builder_name()
         self.env_manager.set_env("IS_RELEASE", self.is_release)
+        self.console = CONSOLE
 
     def post_build(self):
 
@@ -120,8 +121,9 @@ class Creator:
             open_in_browser(self.config.local_options["browser_for_html"], self.config.get_output_dir(self).joinpath("index.html"))
 
     def pre_build(self) -> None:
-        CONSOLE.rule("PRE-LOADING", style="bold")
-        CONSOLE.print(f"- Trying to load env-file {self.config.local_options['env_file_to_load'].as_posix()!r}", style="bold")
+
+        self.console.rule("PRE-LOADING", style="bold")
+        self.console.print(f"- Trying to load env-file {self.config.local_options['env_file_to_load'].as_posix()!r}", style="bold")
         self.env_manager.load_env_file(self.config.local_options["env_file_to_load"])
         if self.config.local_options["preload_external_files"] is True or self.is_release is True:
             CONSOLE.print("- Trying to preload files", style="bold")
@@ -133,7 +135,7 @@ class Creator:
                     file.preload(self.config.get_source_dir(self))
                 except HTTPError as error:
                     CONSOLE.print(f"        Encountered Status Code {error.response.status_code!r} while trying to get {error.response.url!r}.", style="red underline")
-        CONSOLE.rule("PRE-LOADING FINISHED", style="bold")
+        self.console.rule("PRE-LOADING FINISHED", style="bold")
 
     def _get_all_labels(self, build_dir: Path) -> tuple[str]:
         env_pickle_file = next(build_dir.glob("**/environment.pickle"))
@@ -143,10 +145,10 @@ class Creator:
         try:
             return tuple(sorted(raw_labels, key=LABEL_SORT_KEY_FUNCTIONS[self.label_sort_key]))
         except Exception as e:
-            CONSOLE.rule(f"ERROR: {e!r}", style="bold red")
-            CONSOLE.print(f"While sorting labels, encountered Error {e!r}.", style="white on red")
-            CONSOLE.print_exception()
-            CONSOLE.rule(style="bold red")
+            self.console.rule(f"ERROR: {e!r}", style="bold red")
+            self.console.print(f"While sorting labels, encountered Error {e!r}.", style="white on red")
+            self.console.print_exception()
+            self.console.rule(style="bold red")
             return tuple(set(raw_labels))
 
     def build(self):
@@ -174,7 +176,7 @@ class Creator:
     def release(self):
         output_dir = self.config.get_release_output_dir()
         output_dir.mkdir(exist_ok=True, parents=True)
-
+        self.pre_build()
         with TemporaryDirectory() as temp_dir:
             temp_build_dir = Path(temp_dir).resolve()
             args = ["-M", self.builder_name, str(self.config.get_release_source_dir()), str(temp_build_dir)]
