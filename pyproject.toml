@@ -7,10 +7,37 @@ name = "antistasi_sqf_tools"
 authors = [{ name = "antistasi_tools" }]
 classifiers = ["License :: OSI Approved :: MIT License"]
 license = { file = "LICENSE" }
-readme = { file = "README.md", content-type = "text/markdown" }
+readme = { file = "README.rst", content-type = "text/markdown" }
 dynamic = ['version', 'description']
 requires-python = ">=3.9"
-dependencies = ["alabaster==0.7.12", "attrs==21.4.0", "babel==2.10.1", "certifi==2022.5.18.1", "cffi==1.15.0", "charset-normalizer==2.0.12", "click==8.1.3", "colorama==0.4.4", "commonmark==0.9.1", "deprecated==1.2.13", "docutils==0.17.1", "frozendict==2.3.2", "idna==3.3", "imagesize==1.3.0", "jinja2==3.1.2", "markupsafe==2.1.1", "multidict==6.0.2", "packaging==21.3", "pycparser==2.21", "pygithub==1.55", "pygments==2.12.0", "pyjwt==2.4.0", "pynacl==1.5.0", "pyparsing==3.0.9", "python-dotenv==0.20.0", "pytz==2022.1", "requests==2.28.0", "rich==12.4.4", "snowballstemmer==2.2.0", "sphinx==4.5.0", "sphinxcontrib-applehelp==1.0.2", "sphinxcontrib-devhelp==1.0.2", "sphinxcontrib-htmlhelp==2.0.0", "sphinxcontrib-jsmath==1.0.1", "sphinxcontrib-qthelp==1.0.3", "sphinxcontrib-serializinghtml==1.1.5", "urllib3==1.26.9", "wrapt==1.14.1", "yarl==1.7.2"]
+dependencies = [
+    "alabaster==0.7.12",
+    "attrs==21.4.0",
+    "babel==2.10.1",
+    "click==8.1.3",
+    "frozendict==2.3.2",
+    "idna==3.3",
+    "imagesize==1.3.0",
+    "jinja2==3.1.2",
+    "multidict==6.0.2",
+    "packaging==21.3",
+    "pycparser==2.21",
+    "pygithub==1.55",
+    "pygments==2.12.0",
+    "pyparsing==3.0.9",
+    "python-dotenv==0.20.0",
+    "pytz==2022.1",
+    "requests==2.28.0",
+    "rich==12.4.4",
+    "sphinx==4.5.0",
+    "sphinxcontrib-applehelp==1.0.2",
+    "sphinxcontrib-devhelp==1.0.2",
+    "sphinxcontrib-htmlhelp==2.0.0",
+    "sphinxcontrib-jsmath==1.0.1",
+    "sphinxcontrib-qthelp==1.0.3",
+    "sphinxcontrib-serializinghtml==1.1.5",
+    "yarl==1.7.2",
+]
 
 
 [project.urls]
@@ -72,7 +99,7 @@ sections = [
 indented_import_headings = false
 
 [tool.pytest.ini_options]
-addopts = "-rA -vv --durations=0 --capture=tee-sys --show-capture=all --color=auto --code-highlight=yes"
+addopts = "-rA -vv --durations=0 --capture=tee-sys --show-capture=all --color=auto --code-highlight=yes --cov=antistasi_sqf_tools --cov-report html --html-report=./tools/reports/pytest_report --title='PYTEST REPORT'"
 
 [tool.autoflake]
 # additional_imports=None
@@ -86,3 +113,10 @@ ignore_init_module_imports = false
 exclude_globs = []
 exclude_init_files = true
 ignore_missing_import_section = true
+
+[tool.coverage.report]
+omit = ["**/__init__.py"]
+exclude_lines = ["if __name__ == .__main__.:", "def __rich__", "def __repr__"]
+
+[tool.coverage.html]
+directory = "tools/reports/coverage/html"

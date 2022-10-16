@@ -13,10 +13,12 @@ from pathlib import Path
 from functools import cached_property
 from configparser import ConfigParser, NoOptionError, NoSectionError
 from attrs import define
+from contextlib import contextmanager
 from yarl import URL
 import requests
 from types import ModuleType
 import importlib.util
+from antistasi_sqf_tools.utilities import push_cwd
 # * Type-Checking Imports --------------------------------------------------------------------------------->
 if TYPE_CHECKING:
     from antistasi_sqf_tools.doc_creating.creator import Creator
@@ -63,10 +65,11 @@ def find_config_file(file_name: str, start_dir: Union[str, os.PathLike] = None) 
 
 
 def get_sphinx_config(source_folder: Path) -> ModuleType:
-    spec = importlib.util.spec_from_file_location("conf", source_folder.joinpath("conf.py"))
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+    with push_cwd(source_folder):
+        spec = importlib.util.spec_from_file_location("conf", source_folder.joinpath("conf.py"))
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
 
 
 class DocCreationConfig(ConfigParser):

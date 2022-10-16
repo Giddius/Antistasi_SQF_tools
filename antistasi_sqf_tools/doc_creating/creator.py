@@ -13,7 +13,7 @@ import json
 import pickle
 import shutil
 import subprocess
-from typing import Union
+from typing import Union, TYPE_CHECKING
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from traceback import format_tb
@@ -25,8 +25,12 @@ from sphinx.cmd.build import main as sphinx_build
 from antistasi_sqf_tools.doc_creating.env_handling import EnvManager
 from antistasi_sqf_tools.doc_creating.config_handling import DocCreationConfig, get_sphinx_config
 from antistasi_sqf_tools.doc_creating.utils.preload_files import FileToPreload
+from antistasi_sqf_tools.doc_creating.isolated_build_env import TempSourceDir, TempTargetDir, IsolatedBuildEnvironment
+from antistasi_sqf_tools.doc_creating.preprocessing.preprocessor import PreProcessor
 from antistasi_sqf_tools import CONSOLE
 from requests import HTTPError
+
+
 # endregion[Imports]
 
 # region [TODO]
@@ -49,9 +53,16 @@ THIS_FILE_DIR = Path(__file__).parent.absolute()
 class StdOutModifier:
     originial_std_out = sys.stdout
 
+    def __init__(self) -> None:
+        self.output_dir = None
+
+    def set_output_dir(self, output_dir: Path):
+        self.output_dir = output_dir
+
     def write(self, s: str):
         if s.startswith("The HTML pages are in"):
-            return
+            self.__class__.originial_std_out.write(f"<original_text> {s!r}")
+            s = f"The HTML pages are in {self.output_dir.as_posix()!r}.\n"
 
         self.__class__.originial_std_out.write(s)
 
@@ -102,6 +113,7 @@ class Creator:
             self.builder_name = self.config.get_release_builder_name()
         self.env_manager.set_env("IS_RELEASE", self.is_release)
         self.console = CONSOLE
+        self._build_env: IsolatedBuildEnvironment = None
 
     def post_build(self):
 
@@ -118,24 +130,15 @@ class Creator:
             subprocess.run(args, text=True, start_new_session=True, check=False, shell=False, creationflags=subprocess.DETACHED_PROCESS)
 
         if self.config.local_options["auto_open"] is True:
-            open_in_browser(self.config.local_options["browser_for_html"], self.config.get_output_dir(self).joinpath("index.html"))
+            open_in_browser(self.config.local_options["browser_for_html"], self._build_env.target.original_path.joinpath("index.html"))
 
     def pre_build(self) -> None:
 
-        self.console.rule("PRE-LOADING", style="bold")
-        self.console.print(f"- Trying to load env-file {self.config.local_options['env_file_to_load'].as_posix()!r}", style="bold")
-        self.env_manager.load_env_file(self.config.local_options["env_file_to_load"])
-        if self.config.local_options["preload_external_files"] is True or self.is_release is True:
-            CONSOLE.print("- Trying to preload files", style="bold")
-            sphinx_config = get_sphinx_config(self.config.get_source_dir(self))
-            for file in getattr(sphinx_config, "files_to_preload", []):
-                file: FileToPreload
-                CONSOLE.print(f"    :arrow_right_hook: Trying to get :link: {file.url.human_repr()!r} :right_arrow: :page_facing_up: {file.get_full_path(self.config.get_source_dir(self)).as_posix()!r}", style="italic")
-                try:
-                    file.preload(self.config.get_source_dir(self))
-                except HTTPError as error:
-                    CONSOLE.print(f"        Encountered Status Code {error.response.status_code!r} while trying to get {error.response.url!r}.", style="red underline")
-        self.console.rule("PRE-LOADING FINISHED", style="bold")
+        preprocessor_conf_file = self._build_env.source.temp_path.joinpath("preprocessing_conf.py")
+        if preprocessor_conf_file.exists():
+            self.console.print(f"Running preprocessing with preprocessor_conf_file: {preprocessor_conf_file.as_posix()!r}")
+            preprocessor = PreProcessor(source_dir=self._build_env.source.temp_path, target_dir=self._build_env.target.temp_path, preprocessing_conf_file=preprocessor_conf_file, doc_creation_config=self.config)
+            preprocessor.pre_process()
 
     def _get_all_labels(self, build_dir: Path) -> tuple[str]:
         env_pickle_file = next(build_dir.glob("**/environment.pickle"))
@@ -152,24 +155,31 @@ class Creator:
             return tuple(set(raw_labels))
 
     def build(self):
+        self.console.rule("PRE-LOADING", style="bold")
+        self.console.print(f"- Trying to load env-file {self.config.local_options['env_file_to_load'].as_posix()!r}", style="bold")
+        self.env_manager.load_env_file(self.config.local_options["env_file_to_load"])
         if self.is_release is True:
             return self.release()
 
-        self.pre_build()
-        output_dir = self.config.get_output_dir(self)
-        output_dir.mkdir(parents=True, exist_ok=True)
-        with TemporaryDirectory() as temp_dir:
-            temp_build_dir = Path(temp_dir).resolve()
-            args = ["-M", self.builder_name, str(self.config.get_source_dir(self)), str(temp_build_dir)]
+        self._build_env = IsolatedBuildEnvironment(source_dir=self.config.get_source_dir(self), target_dir=self.config.get_output_dir(self))
+        with self._build_env:
+            self.pre_build()
+            # args = ["-M", self.builder_name, str(self.config.get_source_dir(self)), str(temp_build_dir)]
+            meta_dir = self._build_env.target.temp_path.joinpath("meta_data")
+            meta_dir.mkdir(exist_ok=True, parents=True)
+            args = [str(self._build_env.source.temp_path), str(self._build_env.target.temp_path), "-b", self.builder_name]
+
             with StdOutModifier() as mod_std_out:
+                mod_std_out.set_output_dir(self._build_env.target.original_path)
                 returned_code = sphinx_build(args)
             if returned_code == 0:
 
-                label_list = self._get_all_labels(temp_build_dir)
-                shutil.rmtree(output_dir)
-                shutil.copytree(temp_build_dir / self.builder_name, output_dir, dirs_exist_ok=True)
+                label_list = self._get_all_labels(self._build_env.target.temp_path)
 
-                with output_dir.joinpath("available_label.json").open("w", encoding='utf-8', errors='ignore') as f:
+                available_labels_file = self._build_env.target.original_path.joinpath("available_label.json")
+                available_labels_file.parent.mkdir(exist_ok=True, parents=True)
+
+                with available_labels_file.open("w", encoding='utf-8', errors='ignore') as f:
                     json.dump(label_list, f, indent=4, sort_keys=False, default=str)
         self.post_build()
 

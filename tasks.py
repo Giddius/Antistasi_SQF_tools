@@ -1,4 +1,4 @@
-from invoke import task, Result, Context, Collection
+from invoke import Result, Context, Collection
 from pathlib import Path
 import os
 import re
@@ -9,6 +9,11 @@ from tomlkit.exceptions import NonExistentKey
 import subprocess
 from functools import reduce
 from operator import getitem, setitem
+
+from gid_tasks import set_project, add_tasks_to_vscode, task
+
+
+project = set_project(create_missing_vscode_files=True)
 
 PATH_TYPE = Union[str, os.PathLike, Path]
 THIS_FILE_DIR = Path(__file__).parent.resolve()
@@ -131,8 +136,16 @@ def increment_version(increment_part="patch"):
     match = version_regex.search(file_text)
     parts = {k: int(v) for k, v in match.groupdict().items()}
     increment_part = increment_part.casefold()
+    new_parts = {}
+    if increment_part == "patch":
+        new_parts = {"major": parts["major"], "minor": parts["minor"], "patch": parts["patch"] + 1}
 
-    new_parts = parts.copy() | {increment_part: (parts[increment_part] + 1)}
+    elif increment_part == "minor":
+        new_parts = {"major": parts["major"], "minor": parts["minor"] + 1, "patch": 0}
+
+    elif increment_part == "major":
+        new_parts = {"major": parts["major"] + 1, "minor": 0, "patch": 0}
+
     new_version_string = '.'.join(str(i) for i in new_parts.values())
     new_text = version_regex.sub('__version__ = ' + '"' + new_version_string + '"', file_text, count=1)
     version_file.write_text(new_text, encoding='utf-8', errors='ignore')
@@ -174,3 +187,6 @@ def publish(c, typus="patch"):
         print("-" * 20)
     finally:
         os.chdir(old_cwd)
+
+
+add_tasks_to_vscode(project, publish)

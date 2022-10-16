@@ -123,8 +123,10 @@ class EnvManager:
     def load_env_file(self, env_file_path: Path) -> None:
 
         if env_file_path.is_file() is False:
-            return {}
+            print(f"env_file {env_file_path.as_posix()!r} not found")
+            return
         dot_env = DotEnv(env_file_path)
+
         dot_env_dict = dot_env.dict()
         converter_dot_env_dict = {}
         relevant_specs = {name: spec for name, spec in self.env_specs.items() if EnvCategory.OPTIONAL in spec.category or EnvCategory.REQUIRED in spec.category}
@@ -134,9 +136,8 @@ class EnvManager:
                 spec.set_env(v)
                 converter_dot_env_dict[spec.var_name] = v
             except KeyError:
-                os.environ[k] = str(v)
                 converter_dot_env_dict[k] = v
-
+            os.environ[k] = str(v)
         self.loaded_env_files[env_file_path] = converter_dot_env_dict
 
 
