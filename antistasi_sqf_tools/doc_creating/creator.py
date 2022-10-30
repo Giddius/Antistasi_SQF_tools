@@ -129,7 +129,7 @@ class Creator:
 
             subprocess.run(args, text=True, start_new_session=True, check=False, shell=False, creationflags=subprocess.DETACHED_PROCESS)
 
-        if self.config.local_options["auto_open"] is True:
+        if self.config.local_options["auto_open"] is True and self.is_release is False:
             open_in_browser(self.config.local_options["browser_for_html"], self._build_env.target.original_path.joinpath("index.html"))
 
     def pre_build(self) -> None:
