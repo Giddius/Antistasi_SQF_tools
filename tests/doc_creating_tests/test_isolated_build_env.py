@@ -40,7 +40,7 @@ def test_temp_source_dir_init(input_dir: Path, result: dict[str, object]):
 @pytest.mark.parametrize("input_dir, result", [
     param(lazy_fixture("fake_target_dir"), {"exists": True, "name": "created", "files": [], "folder":[]}),
     param(lazy_fixture("non_existing_target_dir"), {"exists": False, "name": "non_existing_created", "files": [], "folder":[]}),
-    param(lazy_fixture("target_dir_with_file"), {"exists": True, "name": "created", "files": ["a_file.txt"], "folder":[]}),
+    param(lazy_fixture("target_dir_with_file"), {"exists": True, "name": "created", "files": [], "folder":[]}),
 
 
 ])

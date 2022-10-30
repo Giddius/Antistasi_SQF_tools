@@ -184,16 +184,27 @@ class Creator:
         self.post_build()
 
     def release(self):
-        output_dir = self.config.get_release_output_dir()
-        output_dir.mkdir(exist_ok=True, parents=True)
-        self.pre_build()
-        with TemporaryDirectory() as temp_dir:
-            temp_build_dir = Path(temp_dir).resolve()
-            args = ["-M", self.builder_name, str(self.config.get_release_source_dir()), str(temp_build_dir)]
-            returned_code = sphinx_build(args)
+        self._build_env = IsolatedBuildEnvironment(source_dir=self.config.get_release_source_dir(self), target_dir=self.config.get_release_output_dir(self))
+        with self._build_env:
+            self.pre_build()
+            # args = ["-M", self.builder_name, str(self.config.get_source_dir(self)), str(temp_build_dir)]
+            meta_dir = self._build_env.target.temp_path.joinpath("meta_data")
+            meta_dir.mkdir(exist_ok=True, parents=True)
+            args = [str(self._build_env.source.temp_path), str(self._build_env.target.temp_path), "-b", self.builder_name]
+
+            with StdOutModifier() as mod_std_out:
+                mod_std_out.set_output_dir(self._build_env.target.original_path)
+                returned_code = sphinx_build(args)
             if returned_code == 0:
-                shutil.rmtree(output_dir)
-                shutil.copytree(temp_build_dir / self.builder_name, output_dir, dirs_exist_ok=True)
+
+                label_list = self._get_all_labels(self._build_env.target.temp_path)
+
+                available_labels_file = self._build_env.target.original_path.joinpath("available_label.json")
+                available_labels_file.parent.mkdir(exist_ok=True, parents=True)
+
+                with available_labels_file.open("w", encoding='utf-8', errors='ignore') as f:
+                    json.dump(label_list, f, indent=4, sort_keys=False, default=str)
+        self.post_build()
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(builder_name={self.builder_name!r}, base_folder={self.base_folder.as_posix()!r}, config={self.config!r})"

@@ -59,8 +59,6 @@ import pyparsing as ppa
 from pyparsing import common as ppc
 
 
-from gidapptools.gid_parsing.universal.character_elements import BaseElements
-
 # endregion[Imports]
 
 # region [TODO]
@@ -87,6 +85,80 @@ quick_example_file_text = quick_example_file.read_text(encoding='utf-8', errors=
 
 
 # endregion[Constants]
+class BaseElements:
+    comma = ppa.Literal(",").suppress()
+    colon = ppa.Literal(":").suppress()
+    semi_colon = ppa.Literal(";").suppress()
+    period = ppa.Literal(".").suppress()
+    pipe = ppa.Literal("|").suppress()
+    at = ppa.Literal("@").suppress()
+    hyhphen = ppa.Literal("-").suppress()
+
+    octothorp = ppa.Literal("#").suppress()
+    tilde = ppa.Literal("~").suppress()
+
+    plus = ppa.Literal("+").suppress()
+    minus = ppa.Literal("-").suppress()
+    asterisk = ppa.Literal("*").suppress()
+    equals = ppa.Literal("=").suppress()
+
+    forward_slash = ppa.Literal("/").suppress()
+    back_slash = ppa.Literal("/").suppress()
+
+    single_quote = ppa.Literal("'").suppress()
+    double_quote = ppa.Literal('"').suppress()
+    any_quote = single_quote | double_quote
+
+    parentheses_open = ppa.Literal("(").suppress()
+    parentheses_close = ppa.Literal(")").suppress()
+
+    brackets_open = ppa.Literal("[").suppress()
+    brackets_close = ppa.Literal("]").suppress()
+
+    braces_open = ppa.Literal("{").suppress()
+    braces_close = ppa.Literal("}").suppress()
+
+
+class Ligatures:
+    arrow_right = ppa.Literal("->").suppress()
+    arrow_left = ppa.Literal("<-").suppress()
+
+    big_arrow_right = ppa.Literal("-->").suppress()
+    big_arrow_left = ppa.Literal("<--").suppress()
+
+
+COMMA = BaseElements.comma
+COLON = BaseElements.colon
+SEMI_COLON = BaseElements.semi_colon
+PERIOD = BaseElements.period
+PIPE = BaseElements.pipe
+AT = BaseElements.at
+HYHPHEN = BaseElements.hyhphen
+OCTOTHORP = BaseElements.octothorp
+TILDE = BaseElements.tilde
+PLUS = BaseElements.plus
+MINUS = BaseElements.minus
+ASTERISK = BaseElements.asterisk
+EQUALS = BaseElements.equals
+FORWARD_SLASH = BaseElements.forward_slash
+BACK_SLASH = BaseElements.back_slash
+SINGLE_QUOTE = BaseElements.single_quote
+DOUBLE_QUOTE = BaseElements.double_quote
+ANY_QUOTE = BaseElements.any_quote
+PARENTHESES_OPEN = BaseElements.parentheses_open
+PARENTHESES_CLOSE = BaseElements.parentheses_close
+BRACKETS_OPEN = BaseElements.brackets_open
+BRACKETS_CLOSE = BaseElements.brackets_close
+BRACES_OPEN = BaseElements.braces_open
+BRACES_CLOSE = BaseElements.braces_close
+
+
+ARROW_RIGHT = Ligatures.arrow_right
+ARROW_LEFT = Ligatures.arrow_left
+BIG_ARROW_RIGHT = Ligatures.big_arrow_right
+BIG_ARROW_LEFT = Ligatures.big_arrow_left
+
+
 ppa.enable_all_warnings()
 
 AMOUNT_CLASSES_FOUND: int = 0
@@ -418,8 +490,6 @@ def do():
     pool.shutdown(wait=True)
 
 # region[Main_Exec]
-
-
 
 
 if __name__ == '__main__':
