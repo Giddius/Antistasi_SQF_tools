@@ -184,7 +184,7 @@ class Creator:
         self.post_build()
 
     def release(self):
-        self._build_env = IsolatedBuildEnvironment(source_dir=self.config.get_release_source_dir(self), target_dir=self.config.get_release_output_dir(self))
+        self._build_env = IsolatedBuildEnvironment(source_dir=self.config.get_release_source_dir(), target_dir=self.config.get_release_output_dir())
         with self._build_env:
             self.pre_build()
             # args = ["-M", self.builder_name, str(self.config.get_source_dir(self)), str(temp_build_dir)]
