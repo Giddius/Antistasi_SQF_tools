@@ -52,7 +52,7 @@ from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from importlib.machinery import SourceFileLoader
 import requests
 from yarl import URL
-# endregion[Imports]
+# endregion [Imports]
 
 # region [TODO]
 
@@ -62,13 +62,13 @@ from yarl import URL
 # region [Logging]
 
 
-# endregion[Logging]
+# endregion [Logging]
 
 # region [Constants]
 
 THIS_FILE_DIR = Path(__file__).parent.absolute()
 
-# endregion[Constants]
+# endregion [Constants]
 
 
 class FileToPreload:
@@ -79,8 +79,6 @@ class FileToPreload:
         self.target_folder = target_folder
         self.target_name = target_name or self.url.name
         self.content_modification_func = content_modification_func
-
-
 
     @classmethod
     def set_chunk_size(cls, new_chunk_size: int):
@@ -109,7 +107,7 @@ class FileToPreload:
         content = self.get_content()
         return self.write_content(content=content, source_dir=source_dir)
 
-    # region[Main_Exec]
+    # region [Main_Exec]
 if __name__ == '__main__':
     pass
-# endregion[Main_Exec]
+# endregion [Main_Exec]

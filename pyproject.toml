@@ -11,32 +11,17 @@ readme = { file = "README.rst", content-type = "text/markdown" }
 dynamic = ['version', 'description']
 requires-python = ">=3.9"
 dependencies = [
-    "alabaster==0.7.12",
-    "attrs==21.4.0",
-    "babel==2.10.1",
-    "click==8.1.3",
-    "frozendict==2.3.2",
-    "idna==3.3",
-    "imagesize==1.3.0",
-    "jinja2==3.1.2",
-    "multidict==6.0.2",
-    "packaging==21.3",
-    "pycparser==2.21",
-    "pygithub==1.55",
-    "pygments==2.12.0",
-    "pyparsing==3.0.9",
-    "python-dotenv==0.20.0",
-    "pytz==2022.1",
-    "requests==2.28.0",
-    "rich==12.4.4",
-    "sphinx==4.5.0",
-    "sphinxcontrib-applehelp==1.0.2",
-    "sphinxcontrib-devhelp==1.0.2",
-    "sphinxcontrib-htmlhelp==2.0.0",
-    "sphinxcontrib-jsmath==1.0.1",
-    "sphinxcontrib-qthelp==1.0.3",
-    "sphinxcontrib-serializinghtml==1.1.5",
-    "yarl==1.7.2",
+    "attrs>=22.2",
+    "click>=8.1",
+    "frozendict>=2.3",
+    "pygithub>=1.55",
+    "pyparsing>=3.0",
+    "python-dotenv>=0.20",
+    "pytz>=2022.1",
+    "rich>=12.6.0",
+    "sphinx>=5.3.0",
+    "yarl>=1.8",
+    "sortedcontainers>=2.4",
 ]
 
 
@@ -120,3 +105,7 @@ exclude_lines = ["if __name__ == .__main__.:", "def __rich__", "def __repr__"]
 
 [tool.coverage.html]
 directory = "tools/reports/coverage/html"
+
+
+[tool.ruff]
+ignore = ["E501", "E402", "E731"]

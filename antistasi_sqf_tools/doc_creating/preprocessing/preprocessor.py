@@ -56,7 +56,7 @@ from antistasi_sqf_tools.utilities import push_cwd
 
 if TYPE_CHECKING:
     from antistasi_sqf_tools.doc_creating.config_handling import DocCreationConfig
-# endregion[Imports]
+# endregion [Imports]
 
 # region [TODO]
 
@@ -66,13 +66,13 @@ if TYPE_CHECKING:
 # region [Logging]
 
 
-# endregion[Logging]
+# endregion [Logging]
 
 # region [Constants]
 
 THIS_FILE_DIR = Path(__file__).parent.absolute()
 
-# endregion[Constants]
+# endregion [Constants]
 
 
 def preprocessing_noop(preprocessor: "PreProcessor"):
@@ -109,10 +109,10 @@ class PreProcessor:
             getattr(self._preprocessing_module, "preprocess", preprocessing_noop)(self)
             getattr(self._preprocessing_module, "after_preprocess", preprocessing_noop)(self)
 
-# region[Main_Exec]
+# region [Main_Exec]
 
 
 if __name__ == '__main__':
     pass
 
-# endregion[Main_Exec]
+# endregion [Main_Exec]

@@ -54,7 +54,7 @@ from importlib.machinery import SourceFileLoader
 from threading import Lock, RLock
 import atexit
 from antistasi_sqf_tools.errors import TempDirClosedError
-# endregion[Imports]
+# endregion [Imports]
 
 # region [TODO]
 
@@ -64,13 +64,13 @@ from antistasi_sqf_tools.errors import TempDirClosedError
 # region [Logging]
 
 
-# endregion[Logging]
+# endregion [Logging]
 
 # region [Constants]
 
 THIS_FILE_DIR = Path(__file__).parent.absolute()
 
-# endregion[Constants]
+# endregion [Constants]
 
 
 class IsolatedTempDir:
@@ -149,6 +149,8 @@ class IsolatedBuildEnvironment:
     def __init__(self, source_dir: Union[str, os.PathLike], target_dir: Union[str, os.PathLike]) -> None:
         self.source = TempSourceDir(source_dir)
         self.target = TempTargetDir(target_dir)
+        os.environ["ORIGINAL_DOC_SOURCE_DIR"] = str(self.source.original_path)
+        os.environ["ORIGINAL_DOC_TARGET_DIR"] = str(self.target.original_path)
         print(f"initialized {self}")
 
     def __enter__(self) -> "IsolatedBuildEnvironment":
@@ -170,10 +172,10 @@ class IsolatedBuildEnvironment:
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(source_dir={self.source.original_path.as_posix()!r}, target_dir={self.target.original_path.as_posix()!r})"
-        # region[Main_Exec]
+        # region [Main_Exec]
 
 
 if __name__ == '__main__':
     pass
 
-# endregion[Main_Exec]
+# endregion [Main_Exec]

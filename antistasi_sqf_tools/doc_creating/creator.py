@@ -10,6 +10,7 @@ Soon.
 import os
 import sys
 import json
+import enum
 import pickle
 import shutil
 import subprocess
@@ -18,6 +19,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from traceback import format_tb
 import importlib.util
+import platform
 # * Third Party Imports --------------------------------------------------------------------------------->
 from sphinx.cmd.build import main as sphinx_build
 
@@ -31,7 +33,7 @@ from antistasi_sqf_tools import CONSOLE
 from requests import HTTPError
 
 
-# endregion[Imports]
+# endregion [Imports]
 
 # region [TODO]
 
@@ -41,13 +43,13 @@ from requests import HTTPError
 # region [Logging]
 
 
-# endregion[Logging]
+# endregion [Logging]
 
 # region [Constants]
 
 THIS_FILE_DIR = Path(__file__).parent.absolute()
 
-# endregion[Constants]python -m fastero
+# endregion [Constants]python -m fastero
 
 
 class StdOutModifier:
@@ -61,7 +63,7 @@ class StdOutModifier:
 
     def write(self, s: str):
         if s.startswith("The HTML pages are in"):
-            self.__class__.originial_std_out.write(f"<original_text> {s!r}")
+            self.__class__.originial_std_out.write(f"<original_text> {s.strip()!r}\n")
             s = f"The HTML pages are in {self.output_dir.as_posix()!r}.\n"
 
         self.__class__.originial_std_out.write(s)
@@ -115,22 +117,33 @@ class Creator:
         self.console = CONSOLE
         self._build_env: IsolatedBuildEnvironment = None
 
-    def post_build(self):
+    def post_build(self, build_success: bool = True):
 
-        def open_in_browser(browser_name: str, file_path: Path):
+        def open_in_browser(browser_name: str, use_private_browser: bool, file_path: Path):
             browser_name = browser_name.strip().casefold()
             if browser_name == "firefox":
-                args = ["firefox", "-private-window"]
+                args = ["firefox", "-private-window"] if use_private_browser is True else ["firefox"]
 
             if browser_name == "chrome":
-                args = ["chrome", "--incognito"]
+                args = ["chrome", "--incognito"] if use_private_browser is True else ["chrome"]
 
-            args.append(file_path.resolve().as_uri())
+            # args.append(file_path.resolve().as_uri())
+            args.append(file_path.resolve())
 
-            subprocess.run(args, text=True, start_new_session=True, check=False, shell=False, creationflags=subprocess.DETACHED_PROCESS)
+            startup_info = None
 
-        if self.config.local_options["auto_open"] is True and self.is_release is False:
-            open_in_browser(self.config.local_options["browser_for_html"], self._build_env.target.original_path.joinpath("index.html"))
+            if platform.system() == "Windows":
+                startup_info = subprocess.STARTUPINFO()
+                startup_info.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+            proc = subprocess.run(args, text=True, start_new_session=True, check=False, shell=False, creationflags=subprocess.DETACHED_PROCESS, startupinfo=startup_info)
+            if proc.stderr:
+                print(proc.stderr)
+
+        if build_success is True:
+
+            if self.config.local_options["auto_open"] is True and self.is_release is False:
+                open_in_browser(self.config.local_options["browser_for_html"], self.config.local_options["use_private_browser"], self._build_env.target.original_path.joinpath("index.html"))
 
     def pre_build(self) -> None:
 
@@ -172,16 +185,18 @@ class Creator:
             with StdOutModifier() as mod_std_out:
                 mod_std_out.set_output_dir(self._build_env.target.original_path)
                 returned_code = sphinx_build(args)
-            if returned_code == 0:
+                build_success = True if returned_code == 0 else False
+            if build_success is True:
 
                 label_list = self._get_all_labels(self._build_env.target.temp_path)
 
-                available_labels_file = self._build_env.target.original_path.joinpath("available_label.json")
+                available_labels_file = self._build_env.target.temp_path.joinpath("available_label.json")
                 available_labels_file.parent.mkdir(exist_ok=True, parents=True)
 
                 with available_labels_file.open("w", encoding='utf-8', errors='ignore') as f:
                     json.dump(label_list, f, indent=4, sort_keys=False, default=str)
-        self.post_build()
+
+        self.post_build(build_success)
 
     def release(self):
         self._build_env = IsolatedBuildEnvironment(source_dir=self.config.get_release_source_dir(), target_dir=self.config.get_release_output_dir())
@@ -195,24 +210,26 @@ class Creator:
             with StdOutModifier() as mod_std_out:
                 mod_std_out.set_output_dir(self._build_env.target.original_path)
                 returned_code = sphinx_build(args)
-            if returned_code == 0:
+                build_success = True if returned_code == 0 else False
+            if build_success is True:
 
                 label_list = self._get_all_labels(self._build_env.target.temp_path)
 
-                available_labels_file = self._build_env.target.original_path.joinpath("available_label.json")
+                available_labels_file = self._build_env.target.temp_path.joinpath("available_label.json")
                 available_labels_file.parent.mkdir(exist_ok=True, parents=True)
 
                 with available_labels_file.open("w", encoding='utf-8', errors='ignore') as f:
                     json.dump(label_list, f, indent=4, sort_keys=False, default=str)
-        self.post_build()
+
+        self.post_build(build_success)
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(builder_name={self.builder_name!r}, base_folder={self.base_folder.as_posix()!r}, config={self.config!r})"
 
-# region[Main_Exec]
+# region [Main_Exec]
 
 
 if __name__ == '__main__':
     pass
 
-# endregion[Main_Exec]
+# endregion [Main_Exec]

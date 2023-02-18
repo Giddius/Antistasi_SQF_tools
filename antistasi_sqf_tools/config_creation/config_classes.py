@@ -52,7 +52,7 @@ from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from importlib.machinery import SourceFileLoader
 
 
-# endregion[Imports]
+# endregion [Imports]
 
 # region [TODO]
 
@@ -62,13 +62,13 @@ from importlib.machinery import SourceFileLoader
 # region [Logging]
 
 
-# endregion[Logging]
+# endregion [Logging]
 
 # region [Constants]
 
 THIS_FILE_DIR = Path(__file__).parent.absolute()
 
-# endregion[Constants]
+# endregion [Constants]
 
 
 class BaseConfigClass:
@@ -109,10 +109,10 @@ class BaseConfigClass:
         return f'{self.__class__.__name__}(name={self.name!r})'
 
 
-# region[Main_Exec]
+# region [Main_Exec]
 if __name__ == '__main__':
     x = BaseConfigClass(name="Wuff", attributes={"wurst": 14})
 
     print(x["asas"])
 
-# endregion[Main_Exec]
+# endregion [Main_Exec]

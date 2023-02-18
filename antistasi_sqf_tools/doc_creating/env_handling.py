@@ -18,7 +18,7 @@ from frozendict import frozendict
 # * Third Party Imports --------------------------------------------------------------------------------->
 from dotenv.main import DotEnv
 
-# endregion[Imports]
+# endregion [Imports]
 
 # region [TODO]
 
@@ -28,13 +28,13 @@ from dotenv.main import DotEnv
 # region [Logging]
 
 
-# endregion[Logging]
+# endregion [Logging]
 
 # region [Constants]
 
 THIS_FILE_DIR = Path(__file__).parent.absolute()
 
-# endregion[Constants]
+# endregion [Constants]
 
 
 class EnvCategory(Flag):
@@ -141,8 +141,8 @@ class EnvManager:
         self.loaded_env_files[env_file_path] = converter_dot_env_dict
 
 
-    # region[Main_Exec]
+    # region [Main_Exec]
 if __name__ == '__main__':
     pass
 
-# endregion[Main_Exec]
+# endregion [Main_Exec]

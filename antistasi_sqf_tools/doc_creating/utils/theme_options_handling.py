@@ -49,7 +49,7 @@ from collections import Counter, ChainMap, deque, namedtuple, defaultdict
 from urllib.parse import urlparse
 import pp
 
-# endregion[Imports]
+# endregion [Imports]
 
 # region [TODO]
 
@@ -59,13 +59,13 @@ import pp
 # region [Logging]
 
 
-# endregion[Logging]
+# endregion [Logging]
 
 # region [Constants]
 
 THIS_FILE_DIR = Path(__file__).parent.absolute()
 
-# endregion[Constants]
+# endregion [Constants]
 
 
 class ThemeOptionsMap(dict):
@@ -204,7 +204,7 @@ def apply_theme_specific_option(global_data: dict[str, object]) -> dict[str, obj
         return global_data
 
 
-# region[Main_Exec]
+# region [Main_Exec]
 if __name__ == '__main__':
     x = theme_specific_option("Groundwork", pygments_style="wuff")
     html_theme = "groundwork"
@@ -215,4 +215,4 @@ if __name__ == '__main__':
     apply_theme_specific_option(globals())
     pp(globals())
 
-# endregion[Main_Exec]
+# endregion [Main_Exec]

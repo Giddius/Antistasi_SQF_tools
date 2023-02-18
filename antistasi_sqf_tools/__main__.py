@@ -15,7 +15,7 @@ import click
 # * Local Imports --------------------------------------------------------------------------------------->
 from antistasi_sqf_tools.doc_creating import add_doc_sub_group
 
-# endregion[Imports]
+# endregion [Imports]
 
 # region [TODO]
 
@@ -25,13 +25,13 @@ from antistasi_sqf_tools.doc_creating import add_doc_sub_group
 # region [Logging]
 
 
-# endregion[Logging]
+# endregion [Logging]
 
 # region [Constants]
 
 THIS_FILE_DIR = Path(__file__).parent.absolute()
 
-# endregion[Constants]
+# endregion [Constants]
 
 
 @click.group(name="antistasi-sqf-tools")
@@ -43,9 +43,9 @@ def antistasi_sqf_tools_cli():
 add_doc_sub_group(antistasi_sqf_tools_cli)
 
 
-# region[Main_Exec]
+# region [Main_Exec]
 
 if __name__ == '__main__':
     pass
 
-# endregion[Main_Exec]
+# endregion [Main_Exec]

@@ -61,7 +61,7 @@ from threading import Semaphore, Lock, RLock
 from dotenv import load_dotenv
 import requests
 load_dotenv("github.env")
-# endregion[Imports]
+# endregion [Imports]
 
 # region [TODO]
 
@@ -71,13 +71,13 @@ load_dotenv("github.env")
 # region [Logging]
 
 
-# endregion[Logging]
+# endregion [Logging]
 
 # region [Constants]
 
 THIS_FILE_DIR = Path(__file__).parent.absolute()
 
-# endregion[Constants]
+# endregion [Constants]
 
 
 class DelayedSemaphore(Semaphore):
@@ -393,10 +393,10 @@ class GithubRepo:
         return f'{self.__class__.__name__}(owner_name={self._owner_name!r}, repo_name={self._repo_name!r}, branch_name={self.branch_name!r})'
 
 
-# region[Main_Exec]
+# region [Main_Exec]
 if __name__ == '__main__':
     x = GithubRepo("official-antistasi-community", "A3-Antistasi").initialize_branch()
 
     print(x._file_items.read_me.get_content())
     print(x._file_items.changelog.get_content())
-# endregion[Main_Exec]
+# endregion [Main_Exec]

@@ -12,10 +12,10 @@ from typing import TYPE_CHECKING, Any, Union, Optional
 from pathlib import Path
 from functools import cached_property
 from configparser import ConfigParser, NoOptionError, NoSectionError
-from attrs import define
+
 from contextlib import contextmanager
 from yarl import URL
-import requests
+
 from types import ModuleType
 import importlib.util
 from antistasi_sqf_tools.utilities import push_cwd
@@ -23,7 +23,7 @@ from antistasi_sqf_tools.utilities import push_cwd
 if TYPE_CHECKING:
     from antistasi_sqf_tools.doc_creating.creator import Creator
     from antistasi_sqf_tools.doc_creating.env_handling import EnvManager
-# endregion[Imports]
+# endregion [Imports]
 
 # region [TODO]
 
@@ -33,13 +33,13 @@ if TYPE_CHECKING:
 # region [Logging]
 
 
-# endregion[Logging]
+# endregion [Logging]
 
 # region [Constants]
 
 THIS_FILE_DIR = Path(__file__).parent.absolute()
 
-# endregion[Constants]
+# endregion [Constants]
 
 
 CONFIG_FILE_NAME = "generate_config.ini"
@@ -99,6 +99,7 @@ class DocCreationConfig(ConfigParser):
     def get_local_options(self) -> dict[str, Any]:
         section_name = "local"
         _out = {"auto_open": self.getboolean(section_name, "auto_open", fallback=False),
+                "use_private_browser": self.getboolean(section_name, "use_private_browser", fallback=True),
                 "browser_for_html": self.get(section_name, "browser_for_html", fallback="firefox"),
                 "env_file_to_load": self.get_env_file_to_load(),
                 "preload_external_files": self.getboolean(section_name, "preload_external_files", fallback=False)}
@@ -153,8 +154,8 @@ class DocCreationConfig(ConfigParser):
         return f'{self.__class__.__name__}(file_path={self.path.as_posix()!r})'
 
 
-# region[Main_Exec]
+# region [Main_Exec]
 if __name__ == '__main__':
     y = DocCreationConfig(find_config_file("generate_config.ini", r"D:\Dropbox\hobby\Modding\Programs\Github\My_Repos\A3-Antistasi-Docs\source\dev_guide"))
     print(y.get_release_output_dir())
-# endregion[Main_Exec]
+# endregion [Main_Exec]
