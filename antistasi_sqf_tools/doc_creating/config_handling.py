@@ -8,27 +8,25 @@ Soon.
 
 # * Standard Library Imports ---------------------------------------------------------------------------->
 import os
+import importlib.util
+import subprocess
+import shutil
+from types import ModuleType
 from typing import TYPE_CHECKING, Any, Union, Optional
 from pathlib import Path
 from functools import cached_property
 from configparser import ConfigParser, NoOptionError, NoSectionError
 
-from contextlib import contextmanager
-from yarl import URL
-
-from types import ModuleType
-import importlib.util
+# * Local Imports --------------------------------------------------------------------------------------->
 from antistasi_sqf_tools.utilities import push_cwd
+
 # * Type-Checking Imports --------------------------------------------------------------------------------->
 if TYPE_CHECKING:
     from antistasi_sqf_tools.doc_creating.creator import Creator
     from antistasi_sqf_tools.doc_creating.env_handling import EnvManager
+
 # endregion [Imports]
 
-# region [TODO]
-
-
-# endregion [TODO]
 
 # region [Logging]
 
@@ -43,6 +41,37 @@ THIS_FILE_DIR = Path(__file__).parent.absolute()
 
 
 CONFIG_FILE_NAME = "generate_config.ini"
+
+GIT_EXE = shutil.which('git.exe')
+
+
+def main_dir_from_git(cwd: Union[str, os.PathLike, Path] = None) -> Optional[Path]:
+    if GIT_EXE is None:
+        raise RuntimeError("Unable to find 'git.exe'. Either Git is not installed or not on the Path.")
+    cmd = subprocess.run([GIT_EXE, "rev-parse", "--show-toplevel"], capture_output=True, text=True, shell=True, check=True, cwd=cwd)
+    main_dir = Path(cmd.stdout.rstrip('\n'))
+    if main_dir.is_dir() is False:
+        raise FileNotFoundError('Unable to locate main dir of project')
+    return main_dir
+
+
+def find_config_file_from_git_base(file_name: str, cwd: Union[str, os.PathLike, Path] = None) -> Optional[Path]:
+    try:
+        git_base_dir = main_dir_from_git(cwd=cwd)
+    except (RuntimeError, FileNotFoundError):
+        return None
+
+    exclude_folders = {".venv",
+                       ".vscode",
+                       ".git",
+                       ".pytest_cache",
+                       "__pycache__"}
+
+    for dirname, folderlist, filelist in os.walk(git_base_dir, topdown=True):
+        folderlist[:] = [d for d in folderlist if d not in exclude_folders]
+        for file in filelist:
+            if file == file_name:
+                return Path(dirname, file).resolve()
 
 
 def find_config_file(file_name: str, start_dir: Union[str, os.PathLike] = None) -> Optional[Path]:
@@ -60,8 +89,12 @@ def find_config_file(file_name: str, start_dir: Union[str, os.PathLike] = None) 
                 return file.resolve()
 
         return find_in_dir(current_dir.parent, last_dir=current_dir)
+    try:
+        config_file = find_in_dir(start_dir, last_dir=None)
+    except FileNotFoundError:
+        config_file = find_config_file_from_git_base(file_name=file_name, cwd=start_dir)
 
-    return find_in_dir(start_dir, last_dir=None)
+    return config_file
 
 
 def get_sphinx_config(source_folder: Path) -> ModuleType:
@@ -102,7 +135,8 @@ class DocCreationConfig(ConfigParser):
                 "use_private_browser": self.getboolean(section_name, "use_private_browser", fallback=True),
                 "browser_for_html": self.get(section_name, "browser_for_html", fallback="firefox"),
                 "env_file_to_load": self.get_env_file_to_load(),
-                "preload_external_files": self.getboolean(section_name, "preload_external_files", fallback=False)}
+                "preload_external_files": self.getboolean(section_name, "preload_external_files", fallback=False),
+                "create_top_level_index_link": self.getboolean(section_name, "create_top_level_index_link", fallback=False)}
         return _out
 
     def get_source_dir(self, creator: "Creator") -> Path:
@@ -144,6 +178,9 @@ class DocCreationConfig(ConfigParser):
 
     def get_release_builder_name(self) -> str:
         return self.get("release", "builder_name", fallback="html")
+
+    def get_create_top_level_index_link(self) -> bool:
+        return self.getboolean("release", "create_top_level_index_link", fallback=False)
 
     def get_env_file_to_load(self) -> Path:
         rel_path = self.get("local", "env_file_to_load", fallback=".env")

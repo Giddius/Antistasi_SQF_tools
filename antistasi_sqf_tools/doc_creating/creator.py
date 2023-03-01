@@ -10,28 +10,21 @@ Soon.
 import os
 import sys
 import json
-import enum
 import pickle
-import shutil
-import subprocess
-from typing import Union, TYPE_CHECKING
-from pathlib import Path
-from tempfile import TemporaryDirectory
-from traceback import format_tb
-import importlib.util
 import platform
+import subprocess
+from typing import Union
+from pathlib import Path
+
 # * Third Party Imports --------------------------------------------------------------------------------->
 from sphinx.cmd.build import main as sphinx_build
 
 # * Local Imports --------------------------------------------------------------------------------------->
-from antistasi_sqf_tools.doc_creating.env_handling import EnvManager
-from antistasi_sqf_tools.doc_creating.config_handling import DocCreationConfig, get_sphinx_config
-from antistasi_sqf_tools.doc_creating.utils.preload_files import FileToPreload
-from antistasi_sqf_tools.doc_creating.isolated_build_env import TempSourceDir, TempTargetDir, IsolatedBuildEnvironment
-from antistasi_sqf_tools.doc_creating.preprocessing.preprocessor import PreProcessor
 from antistasi_sqf_tools import CONSOLE
-from requests import HTTPError
-
+from antistasi_sqf_tools.doc_creating.env_handling import EnvManager
+from antistasi_sqf_tools.doc_creating.config_handling import DocCreationConfig
+from antistasi_sqf_tools.doc_creating.isolated_build_env import IsolatedBuildEnvironment
+from antistasi_sqf_tools.doc_creating.preprocessing.preprocessor import PreProcessor
 
 # endregion [Imports]
 
@@ -142,8 +135,31 @@ class Creator:
 
         if build_success is True:
 
-            if self.config.local_options["auto_open"] is True and self.is_release is False:
-                open_in_browser(self.config.local_options["browser_for_html"], self.config.local_options["use_private_browser"], self._build_env.target.original_path.joinpath("index.html"))
+            if self.is_release is False:
+
+                if self.config.local_options["auto_open"] is True and self.is_release is False:
+                    open_in_browser(self.config.local_options["browser_for_html"], self.config.local_options["use_private_browser"], self._build_env.target.original_path.joinpath("index.html"))
+
+            elif self.is_release is True:
+
+                if self.config.get_create_top_level_index_link():
+                    self.create_top_level_index_link_file()
+
+    def create_top_level_index_link_file(self) -> Path:
+        release_dir = self.config.get_release_output_dir().resolve()
+        if "docs" in {p.casefold() for p in release_dir.parts}:
+            index_link_file_dir = release_dir
+            while index_link_file_dir.is_dir() is False or index_link_file_dir.name.casefold() != "docs":
+                index_link_file_dir = index_link_file_dir.parent
+
+        else:
+            index_link_file_dir = release_dir.parent
+
+        index_link_file_path = index_link_file_dir.joinpath("index.html")
+        source_index_file_path = release_dir.joinpath("index.html")
+
+        rel_source_index_file_path = source_index_file_path.relative_to(index_link_file_path.parent)
+        index_link_file_path.write_text(f"""<meta http-equiv="refresh" content="0; url=./{rel_source_index_file_path.as_posix()}" />""")
 
     def pre_build(self) -> None:
 
@@ -210,7 +226,7 @@ class Creator:
             with StdOutModifier() as mod_std_out:
                 mod_std_out.set_output_dir(self._build_env.target.original_path)
                 returned_code = sphinx_build(args)
-                build_success = True if returned_code == 0 else False
+                build_success = returned_code == 0
             if build_success is True:
 
                 label_list = self._get_all_labels(self._build_env.target.temp_path)

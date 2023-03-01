@@ -1,33 +1,47 @@
-from .external_link_collection import ExternalLink, ExternalLinkCategory, ExternalLinkCollection
-from .link_file_creation import build_link_file
-import os
-from typing import TYPE_CHECKING, Union, Optional, cast
-from pathlib import Path, WindowsPath, PurePath
-from sphinx.util.docutils import SphinxRole, SphinxDirective
-from docutils.parsers.rst import directives
-from sphinx.util.nodes import set_source_info
-from docutils.parsers.rst.roles import set_classes
-from time import sleep
-import random
-from docutils import nodes
-from pprint import pprint
-from yarl import URL
-import docutils
-import re
-from sphinx.util import logging as sphinx_logging
-from sphinx.domains.std import StandardDomain
-from sphinx.util.nodes import clean_astext
-from sphinx_design.cards import CardDirective
 
-import traceback
-from antistasi_sqf_tools import __version__
+# region [Imports]
+
+# * Standard Library Imports ---------------------------------------------------------------------------->
+import os
+import re
+import random
+from time import sleep
+from typing import TYPE_CHECKING, Optional, Callable, Union
+from pathlib import Path, PurePath, WindowsPath
+
+# * Third Party Imports --------------------------------------------------------------------------------->
+import docutils
+from yarl import URL
+from docutils import nodes
+from docutils.statemachine import StringList
+
+from sphinx.util import logging as sphinx_logging
 from sphinx.util import requests as sphinx_requests
-import jinja2
-from sphinx_design.badges_buttons import create_bdg_classes
+from sphinx.util.docutils import SphinxRole, SphinxDirective
+
+# * Local Imports --------------------------------------------------------------------------------------->
+from antistasi_sqf_tools import __version__
+
+from .link_file_creation import build_link_file
+from .external_link_collection import FixedExternalLink, FixedExternalLinkCollection
+import sys
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
+# * Type-Checking Imports --------------------------------------------------------------------------------->
+
+
+
+
 if TYPE_CHECKING:
-    from sphinx.application import Sphinx as SphinxApplication
     from sphinx.config import Config as SphinxConfig
+    from sphinx.application import Sphinx as SphinxApplication
     from docutils.parsers.rst.states import Inliner
+    import sphinx_design
+
+# endregion [Imports]
+
 
 # region [Constants]
 
@@ -48,8 +62,44 @@ DEFAULT_BUILD_LINKS_FILE_TEMPLATE_NAME = "links_template.jinja_rst"
 # endregion [Constants]
 
 
-class ExternalLinkRole(SphinxRole):
-    link_collection: ExternalLinkCollection = None
+class ConfigHolder(dict):
+
+    _settings_name: str = "external_links_settings"
+
+    _default_value = {}
+
+    _sub_value_map: dict[str, Callable] = {}
+
+    _missing_sentinel = object()
+
+    @classmethod
+    def from_sphinx_config(cls, sphinx_config: "SphinxConfig") -> Self:
+        return cls(getattr(sphinx_config, cls._settings_name))
+
+    def get_sub_value(self, key: str) -> object:
+        raw_value = super().get(key, self._missing_sentinel)
+
+        return self._sub_value_map[key](raw_value)
+
+    def __getitem__(self, __key) -> object:
+        return self.get_sub_value(__key)
+
+    def get(self, key, default=None) -> object:
+        return self.get_sub_value(key)
+
+    @classmethod
+    def handle_external_link_default_target(cls, value: Union[str, object]) -> str:
+        if value is cls._missing_sentinel:
+            return "NEW_TAP"
+
+        return value
+
+
+ConfigHolder._sub_value_map["external_link_default_target"] = ConfigHolder.handle_external_link_default_target
+
+
+class FixedExternalLinkRole(SphinxRole):
+    link_collection: FixedExternalLinkCollection = None
     link_url: URL
     link_name: str
     target_value: str
@@ -86,6 +136,44 @@ class ExternalLinkRole(SphinxRole):
         self.set_source_info(node)
 
         return [node], []
+
+
+
+class ExternalLinkListItemNode(nodes.container):
+    pass
+
+class FixedExternalLinkListDirective(SphinxDirective):
+    has_content = False
+
+    def run(self) -> list[nodes.Node]:
+        all_nodes = []
+        for cat, links in FixedExternalLinkRole.link_collection.get_link_file_data():
+            cat_section = nodes.container(ids=[cat.name], classes=["sd-card", "sd-sphinx-override", "sd-mb-3", "sd-shadow-md"], names=[cat.name])
+            self.state.nested_parse(StringList([str(cat.pretty_name)]), 1, cat_section)
+
+            self.set_source_info(cat_section)
+            cat_def_list = nodes.definition_list(classes=[f"wurst_{cat.name}"])
+
+            for link in links:
+                item = nodes.definition_list_item(classes=[f"wuff_{link.name}"])
+                term = nodes.term()
+
+                term.append(nodes.reference("", docutils.utils.unescape(str(link.name)), refuri=str(link.url)))
+                item.append(term)
+                definition = nodes.definition()
+                def_paragraph_1 = nodes.paragraph()
+
+                def_paragraph_1.append(nodes.Text(link.description or ""))
+                definition.append(def_paragraph_1)
+
+                item.append(definition)
+                cat_def_list.append(item)
+
+            cat_section.append(cat_def_list)
+
+            all_nodes.append(cat_section)
+
+        return all_nodes
 
 
 class SteamLink(SphinxRole):
@@ -167,9 +255,9 @@ def validate_display_name(in_display_name: str) -> str:
 
 
 def handle_link_file(app: "SphinxApplication"):
-    if getattr(app.config, EXTERNAL_LINK_BUILD_LINK_FILE_CONFIG_NAME) is False:
+    if getattr(app.config, EXTERNAL_LINK_BUILD_LINK_FILE_CONFIG_NAME, False) is False:
         return
-    build_link_file(app=app, link_collection=ExternalLinkRole.link_collection, template_name=getattr(app.config, EXTERNAL_LINK_BUILD_LINK_FILE_TEMPLATE_NAME))
+    build_link_file(app=app, link_collection=FixedExternalLinkRole.link_collection, template_name=getattr(app.config, EXTERNAL_LINK_BUILD_LINK_FILE_TEMPLATE_NAME))
 
 
 def resolve_link_file_path(source_dir: str, config: "SphinxConfig") -> Optional[Path]:
@@ -181,38 +269,41 @@ def resolve_link_file_path(source_dir: str, config: "SphinxConfig") -> Optional[
                 if file.casefold() == DEFAULT_LINK_FILE_NAME:
                     return Path(dirname, file).resolve()
 
-    return getattr(config, EXTERNAL_LINK_FILE_CONFIG_NAME) or locate_link_file()
+    return getattr(config, EXTERNAL_LINK_FILE_CONFIG_NAME, None) or locate_link_file()
 
 
 def setup_link_collection(app: "SphinxApplication", config: "SphinxConfig"):
-    default_target_attribute_value = getattr(config, EXTERNAL_LINK_DEFAULT_TARGET_CONFIG_NAME)
+    settings = ConfigHolder.from_sphinx_config(config)
+    default_target_attribute_value = settings.get_sub_value("external_link_default_target")
 
-    ExternalLink.set_default_target_attribute(default_target_attribute_value)
+    FixedExternalLink.set_default_target_attribute(default_target_attribute_value)
 
-    link_collection = ExternalLinkCollection()
+    link_collection = FixedExternalLinkCollection()
 
     link_file = resolve_link_file_path(app.srcdir or app.confdir, config)
     if link_file is None:
         logger = sphinx_logging.getLogger(__name__)
         logger.warning("Unable to resolve link-file (link_file=%r)", link_file, location="")
 
-    link_collection.load_links_from_file(link_file).add_links(getattr(app.config, EXTERNAL_LINKS_EXTRA_LINKS_CONFIG_NAME))
-    ExternalLinkRole.link_collection = link_collection
+    link_collection.load_links_from_file(link_file).add_links(getattr(app.config, EXTERNAL_LINKS_EXTRA_LINKS_CONFIG_NAME, []))
+    FixedExternalLinkRole.link_collection = link_collection
 
 
 def setup(app: "SphinxApplication"):
-    app.add_config_value(EXTERNAL_LINK_FILE_CONFIG_NAME, None, '', types=[type(None), str, Path, WindowsPath, PurePath])
-    app.add_config_value(EXTERNAL_LINK_DEFAULT_TARGET_CONFIG_NAME, "NEW_TAP", '', types=[str])
-    app.add_config_value(EXTERNAL_LINK_BUILD_LINK_FILE_CONFIG_NAME, True, '', types=[bool])
-    app.add_config_value(EXTERNAL_LINK_BUILD_LINK_FILE_TEMPLATE_NAME, DEFAULT_BUILD_LINKS_FILE_TEMPLATE_NAME, "", types=[str])
-    app.add_config_value(EXTERNAL_LINKS_EXTRA_LINKS_CONFIG_NAME, tuple(), "", types=[list, tuple, set])
-
-    app.add_role("la", ExternalLinkRole())
-    app.add_role("l", ExternalLinkRole(use_base_name_always=True))
+    # app.add_config_value(EXTERNAL_LINK_FILE_CONFIG_NAME, None, '', types=[type(None), str, Path, WindowsPath, PurePath])
+    # app.add_config_value(EXTERNAL_LINK_DEFAULT_TARGET_CONFIG_NAME, "NEW_TAP", '', types=[str])
+    # app.add_config_value(EXTERNAL_LINK_BUILD_LINK_FILE_CONFIG_NAME, True, '', types=[bool])
+    # app.add_config_value(EXTERNAL_LINK_BUILD_LINK_FILE_TEMPLATE_NAME, DEFAULT_BUILD_LINKS_FILE_TEMPLATE_NAME, "", types=[str])
+    # app.add_config_value(EXTERNAL_LINKS_EXTRA_LINKS_CONFIG_NAME, tuple(), "", types=[list, tuple, set])
+    app.add_config_value(ConfigHolder._settings_name, ConfigHolder._default_value, rebuild="", types=(dict,))
+    app.add_role("la", FixedExternalLinkRole())
+    app.add_role("l", FixedExternalLinkRole(use_base_name_always=True))
     app.add_role("steam", SteamLink())
 
+    app.add_directive("linklist", FixedExternalLinkListDirective)
+
     app.connect("config-inited", setup_link_collection)
-    app.connect("builder-inited", handle_link_file)
+    # app.connect("builder-inited", handle_link_file)
 
     return {
         "version": __version__,

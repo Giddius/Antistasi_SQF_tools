@@ -6,63 +6,33 @@ Soon.
 
 # region [Imports]
 
+# * Standard Library Imports ---------------------------------------------------------------------------->
 import os
-import re
 import sys
 import json
-import queue
-import math
-import base64
-import pickle
-import random
-import shelve
-import dataclasses
-import shutil
-import asyncio
-import logging
-import sqlite3
-import platform
-
-import subprocess
-import inspect
-
-from time import sleep, process_time, process_time_ns, perf_counter, perf_counter_ns
-from io import BytesIO, StringIO
-from abc import ABC, ABCMeta, abstractmethod
-from copy import copy, deepcopy
-from enum import Enum, Flag, auto, unique
-from pprint import pprint, pformat
+from typing import TYPE_CHECKING, Union, Optional, TypedDict
 from pathlib import Path
-from string import Formatter, digits, printable, whitespace, punctuation, ascii_letters, ascii_lowercase, ascii_uppercase
-from timeit import Timer
-from typing import (TYPE_CHECKING, TypeVar, TypeGuard, TypeAlias, Final, TypedDict, Generic, Union, Optional, ForwardRef, final,
-                    no_type_check, no_type_check_decorator, overload, get_type_hints, cast, Protocol, runtime_checkable, NoReturn, NewType, Literal, AnyStr, IO, BinaryIO, TextIO, Any)
-from collections import Counter, ChainMap, deque, namedtuple, defaultdict
-from collections.abc import (AsyncGenerator, AsyncIterable, AsyncIterator, Awaitable, ByteString, Callable, Collection, Container, Coroutine, Generator,
-                             Hashable, ItemsView, Iterable, Iterator, KeysView, Mapping, MappingView, MutableMapping, MutableSequence, MutableSet, Reversible, Sequence, Set, Sized, ValuesView)
-from zipfile import ZipFile, ZIP_LZMA
-from datetime import datetime, timezone, timedelta
-from tempfile import TemporaryDirectory
-from textwrap import TextWrapper, fill, wrap, dedent, indent, shorten
-from functools import wraps, partial, lru_cache, singledispatch, total_ordering, cached_property, cache, reduce
-from contextlib import contextmanager, asynccontextmanager, nullcontext, closing, ExitStack, suppress
-from statistics import mean, mode, stdev, median, variance, pvariance, harmonic_mean, median_grouped
-from urllib.parse import urlparse
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, Future, wait, as_completed, ALL_COMPLETED, FIRST_EXCEPTION, FIRST_COMPLETED
-from operator import add
-from warnings import warn, warn_explicit
+from functools import total_ordering
+from collections.abc import Callable, Iterable
+
+# * Third Party Imports --------------------------------------------------------------------------------->
 from yarl import URL
 from sphinx.util import logging as sphinx_logging
+
 if sys.version_info >= (3, 11):
     from typing import Self
 else:
     from typing_extensions import Self
 
+# * Local Imports --------------------------------------------------------------------------------------->
 from antistasi_sqf_tools.doc_creating.utils.string_helper import StringCase, StringCaseConverter
-from .external_link import ExternalLink, TARGET_STRING_TYPE
 
+from .external_link import TARGET_STRING_TYPE, FixedExternalLink
+
+# * Type-Checking Imports --------------------------------------------------------------------------------->
 if TYPE_CHECKING:
     ...
+
 # endregion [Imports]
 
 # region [TODO]
@@ -83,13 +53,13 @@ THIS_FILE_DIR = Path(__file__).parent.absolute()
 
 
 @total_ordering
-class ExternalLinkCategory:
+class FixedExternalLinkCategory:
 
     def __init__(self,
                  name: str) -> None:
 
         self.name = self.normalize_name(name)
-        self._links: list["ExternalLink"] = []
+        self._links: list["FixedExternalLink"] = []
 
     @classmethod
     def normalize_name(cls, name: str) -> str:
@@ -104,7 +74,7 @@ class ExternalLinkCategory:
         return self.prettify_name(self.name)
 
     @property
-    def links(self) -> list[ExternalLink]:
+    def links(self) -> list[FixedExternalLink]:
         sorted_links = sorted(self._links, key=lambda x: x.name.casefold().strip())
         _out = [link for link in sorted_links if link.position is None]
 
@@ -117,19 +87,19 @@ class ExternalLinkCategory:
         return _out
 
     @property
-    def link_file_links(self) -> list[ExternalLink]:
+    def link_file_links(self) -> list[FixedExternalLink]:
         return [link for link in self.links if "not_in_linkfile" not in link.flags]
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, ExternalLinkCategory):
+        if not isinstance(other, FixedExternalLinkCategory):
             return NotImplemented
 
         return self.name == other.name and len(self.links) == len(other.links)
 
     def __lt__(self, other: object) -> bool:
-        if not isinstance(other, ExternalLinkCategory):
+        if not isinstance(other, FixedExternalLinkCategory):
             return NotImplemented
-        if self.name == ExternalLinkCollection.default_category_name:
+        if self.name == FixedExternalLinkCollection.default_category_name:
             return False
         if len(self.links) == len(other.links):
             return sorted([self.name, other.name])[0] != self.name
@@ -150,50 +120,50 @@ class LinkData(TypedDict):
     target: Optional["TARGET_STRING_TYPE"]
 
 
-class ExternalLinkCollection:
+class FixedExternalLinkCollection:
     default_category_name: str = "general"
 
     default_sort_func = None
 
-    def __init__(self, sort_func: Callable[[ExternalLinkCategory], tuple] = None) -> None:
+    def __init__(self, sort_func: Callable[[FixedExternalLinkCategory], tuple] = None) -> None:
         self.sort_func = sort_func or self.default_sort_func
-        self._categories: set[ExternalLinkCategory] = []
+        self._categories: set[FixedExternalLinkCategory] = []
 
     @property
-    def categories(self) -> tuple[ExternalLinkCategory]:
+    def categories(self) -> tuple[FixedExternalLinkCategory]:
         return tuple(reversed(sorted(self._categories, key=self.sort_func)))
 
     @property
-    def link_file_categories(self) -> tuple[ExternalLinkCategory]:
+    def link_file_categories(self) -> tuple[FixedExternalLinkCategory]:
         return [cat for cat in self.categories if len(cat.link_file_links) > 0]
 
     @property
-    def links(self) -> tuple[ExternalLink]:
+    def links(self) -> tuple[FixedExternalLink]:
         _out = []
         for category in self.categories:
             _out += list(category.links)
         return tuple(_out)
 
-    def get_category_by_name(self, name: str) -> ExternalLinkCategory:
-        mod_name = ExternalLinkCategory.normalize_name(name)
+    def get_category_by_name(self, name: str) -> FixedExternalLinkCategory:
+        mod_name = FixedExternalLinkCategory.normalize_name(name)
 
         category = next((c for c in self._categories if c.name == mod_name), None)
         if category is None:
             raise KeyError(f"No category named {name!r} ({mod_name!r}).")
         return category
 
-    def get_link_by_name(self, name: str) -> Optional[ExternalLink]:
+    def get_link_by_name(self, name: str) -> Optional[FixedExternalLink]:
         return next((link for link in self.links if name.casefold() in {link.name.casefold()}.union({alias_name.casefold() for alias_name in link.aliases})), None)
 
-    def get_link_by_url(self, url: Union[str, URL]) -> Optional[ExternalLink]:
+    def get_link_by_url(self, url: Union[str, URL]) -> Optional[FixedExternalLink]:
         return next((link for link in self.links if link.url == URL(url)), None)
 
-    def add_category(self, category_name: str) -> ExternalLinkCategory:
+    def add_category(self, category_name: str) -> FixedExternalLinkCategory:
 
         try:
             category = self.get_category_by_name(category_name)
         except KeyError:
-            category = ExternalLinkCategory(category_name)
+            category = FixedExternalLinkCategory(category_name)
             self._categories.append(category)
 
         return category
@@ -206,7 +176,7 @@ class ExternalLinkCollection:
         link = self.get_link_by_url(link_data["url"])
 
         if link is None:
-            link = ExternalLink(**link_data)
+            link = FixedExternalLink(**link_data)
             link._add_default_aliases()
             link.category = category
             category._links.append(link)
@@ -246,7 +216,7 @@ class ExternalLinkCollection:
 
         return self
 
-    def get_link_file_data(self) -> list[tuple["ExternalLinkCategory", list["ExternalLink"]]]:
+    def get_link_file_data(self) -> list[tuple["FixedExternalLinkCategory", list["FixedExternalLink"]]]:
         data = []
         for category in self.link_file_categories:
             data.append((category, category.link_file_links))

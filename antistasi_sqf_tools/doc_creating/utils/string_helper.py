@@ -9,6 +9,7 @@ Soon.
 # * Standard Library Imports ---------------------------------------------------------------------------->
 import re
 import inspect
+from enum import Enum, auto
 from string import punctuation, ascii_lowercase
 from typing import Any, Union, Literal, Mapping, Callable, Iterable, Optional
 from pathlib import Path
@@ -16,9 +17,6 @@ from textwrap import dedent
 
 # * Third Party Imports --------------------------------------------------------------------------------->
 import pyparsing as ppa
-from enum import auto, Enum
-# * Gid Imports ----------------------------------------------------------------------------------------->
-
 
 # endregion [Imports]
 

@@ -8,14 +8,12 @@ Soon.
 
 # * Standard Library Imports ---------------------------------------------------------------------------->
 import os
-from enum import Enum, Flag, auto, unique
-
+from enum import Flag, auto
 from pathlib import Path
-from typing import Optional
-from collections.abc import Iterable, Mapping, Callable
-from collections import UserList, defaultdict
-from frozendict import frozendict
+from collections.abc import Mapping, Callable
+
 # * Third Party Imports --------------------------------------------------------------------------------->
+
 from dotenv.main import DotEnv
 
 # endregion [Imports]
@@ -90,7 +88,7 @@ BASE_ENV_SPECS[local_repo_path_spec.name] = local_repo_path_spec
 is_release_spec = EnvSpec(name="IS_RELEASE", category=EnvCategory.AUTO_CREATED, conversion_func=lambda x: "1" if x is True else "0", description=None)
 BASE_ENV_SPECS[is_release_spec.name] = is_release_spec
 
-BASE_ENV_SPECS: frozendict[str, EnvSpec] = frozendict(**BASE_ENV_SPECS)
+BASE_ENV_SPECS: dict[str, EnvSpec] = dict(**BASE_ENV_SPECS)
 
 
 class EnvManager:

@@ -1,19 +1,28 @@
-from typing import cast, TYPE_CHECKING
-from docutils import nodes
-from sphinx.domains.std import StandardDomain
-from sphinx.util.nodes import clean_astext
-from sphinx.util import logging as sphinx_logging
-import traceback
-import re
 
+# region [Imports]
+
+# * Standard Library Imports ---------------------------------------------------------------------------->
+import re
+import traceback
+from typing import TYPE_CHECKING, cast
+
+# * Third Party Imports --------------------------------------------------------------------------------->
+from docutils import nodes
+from sphinx.util import logging as sphinx_logging
+from sphinx.util.nodes import clean_astext
+from sphinx.domains.std import StandardDomain
+from pathlib import Path
+# * Type-Checking Imports --------------------------------------------------------------------------------->
 if TYPE_CHECKING:
     from sphinx.application import Sphinx as SphinxApplication
-    from sphinx.config import Config as SphinxConfig
-    from docutils.parsers.rst.states import Inliner
+
+# endregion [Imports]
 
 
 NORMALIZE_REPLACE_REGEX = re.compile(r"[ \_\.\:\;\[\]\(\)\{\}]")
 NORMALIZE_REMOVE_REGEX = re.compile(r"[\!\"\'\§\%\&]")
+
+THIS_FILE_DIR = Path(__file__).parent.absolute()
 
 
 def normalize_id(in_ref_name: str) -> str:

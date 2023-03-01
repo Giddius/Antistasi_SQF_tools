@@ -9,19 +9,15 @@ classifiers = ["License :: OSI Approved :: MIT License"]
 license = { file = "LICENSE" }
 readme = { file = "README.rst", content-type = "text/markdown" }
 dynamic = ['version', 'description']
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
-    "attrs>=22.2",
     "click>=8.1",
-    "frozendict>=2.3",
     "pygithub>=1.55",
     "pyparsing>=3.0",
     "python-dotenv>=0.20",
-    "pytz>=2022.1",
     "rich>=12.6.0",
     "sphinx>=5.3.0",
     "yarl>=1.8",
-    "sortedcontainers>=2.4",
 ]
 
 
@@ -96,8 +92,8 @@ ignore_init_module_imports = false
 
 [tool.gid_tasks.imports_cleaner]
 exclude_globs = []
-exclude_init_files = true
-ignore_missing_import_section = true
+exclude_init_files = false
+ignore_missing_import_section = false
 
 [tool.coverage.report]
 omit = ["**/__init__.py"]

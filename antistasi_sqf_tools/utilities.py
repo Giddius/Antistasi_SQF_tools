@@ -6,52 +6,13 @@ Soon.
 
 # region [Imports]
 
+# * Standard Library Imports ---------------------------------------------------------------------------->
 import os
-import re
-import sys
-import json
-import queue
-import math
-import base64
-import pickle
-import random
-import shelve
-import dataclasses
-import shutil
-import asyncio
-import logging
-import sqlite3
-import platform
-import importlib
-import subprocess
-import inspect
-
-from time import sleep, process_time, process_time_ns, perf_counter, perf_counter_ns
-from io import BytesIO, StringIO
-from abc import ABC, ABCMeta, abstractmethod
-from copy import copy, deepcopy
-from enum import Enum, Flag, auto, unique
-from time import time, sleep
-from pprint import pprint, pformat
+from typing import Union, Optional
 from pathlib import Path
-from string import Formatter, digits, printable, whitespace, punctuation, ascii_letters, ascii_lowercase, ascii_uppercase
-from timeit import Timer
-from typing import TYPE_CHECKING, Union, Callable, Iterable, Optional, Mapping, Any, IO, TextIO, BinaryIO, Hashable, Generator, Literal, TypeVar, TypedDict, AnyStr
-from zipfile import ZipFile, ZIP_LZMA
-from datetime import datetime, timezone, timedelta
-from tempfile import TemporaryDirectory
-from textwrap import TextWrapper, fill, wrap, dedent, indent, shorten
-from functools import wraps, partial, lru_cache, singledispatch, total_ordering, cached_property
-from importlib import import_module, invalidate_caches
-from contextlib import contextmanager, asynccontextmanager, nullcontext, closing, ExitStack, suppress
-from statistics import mean, mode, stdev, median, variance, pvariance, harmonic_mean, median_grouped
-from collections import Counter, ChainMap, deque, namedtuple, defaultdict
-from urllib.parse import urlparse
-from importlib.util import find_spec, module_from_spec, spec_from_file_location
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
-from importlib.machinery import SourceFileLoader
-
-
+from contextlib import contextmanager
+import shutil
+import subprocess
 # endregion [Imports]
 
 # region [TODO]
@@ -69,6 +30,25 @@ from importlib.machinery import SourceFileLoader
 THIS_FILE_DIR = Path(__file__).parent.absolute()
 
 # endregion [Constants]
+
+GIT_EXE = shutil.which('git.exe')
+
+
+def main_dir_from_git(cwd: Union[str, os.PathLike, Path] = None) -> Optional[Path]:
+    if GIT_EXE is None:
+        raise RuntimeError("Unable to find 'git.exe'. Either Git is not installed or not on the Path.")
+    cmd = subprocess.run([GIT_EXE, "rev-parse", "--show-toplevel"], capture_output=True, text=True, shell=True, check=True, cwd=cwd)
+    text = cmd.stdout.strip()
+    if text:
+        main_dir = Path(cmd.stdout.rstrip('\n')).resolve()
+
+        if main_dir.exists() is False or main_dir.is_dir() is False:
+            raise FileNotFoundError('Unable to locate main dir of project')
+
+    else:
+        raise FileNotFoundError('Unable to locate main dir of project')
+
+    return main_dir
 
 
 @contextmanager

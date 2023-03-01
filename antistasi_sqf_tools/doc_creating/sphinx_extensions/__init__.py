@@ -1,14 +1,23 @@
+
+# region [Imports]
+
+# * Standard Library Imports ---------------------------------------------------------------------------->
 import os
-from pathlib import Path
 from typing import TYPE_CHECKING
+from pathlib import Path
 
-
-from .links_collection import setup as links_collection_setup
-from .misc_additions import setup as misc_additions_setup
+# * Local Imports --------------------------------------------------------------------------------------->
 from antistasi_sqf_tools import __version__
+
+from .misc_additions import setup as misc_additions_setup
+from .links_collection import setup as links_collection_setup
+
+# * Type-Checking Imports --------------------------------------------------------------------------------->
 if TYPE_CHECKING:
-    from sphinx.application import Sphinx as SphinxApplication
     from sphinx.config import Config as SphinxConfig
+    from sphinx.application import Sphinx as SphinxApplication
+
+# endregion [Imports]
 
 
 def on_config_inited(app: "SphinxApplication", config: "SphinxConfig") -> None:

@@ -1,14 +1,28 @@
-from pathlib import Path
-import click
-from sphinx.cmd.build import main as sphinx_build
+
+# region [Imports]
+
+# * Standard Library Imports ---------------------------------------------------------------------------->
 import os
-from antistasi_sqf_tools.doc_creating.config_handling import find_config_file, CONFIG_FILE_NAME
-from antistasi_sqf_tools.doc_creating.creator import Creator
-from antistasi_sqf_tools import CONSOLE
+from pathlib import Path
+
+# * Third Party Imports --------------------------------------------------------------------------------->
+import click
 from rich.table import Table
+from sphinx.cmd.build import main as sphinx_build
+
+# * Local Imports --------------------------------------------------------------------------------------->
+from antistasi_sqf_tools import CONSOLE
+from antistasi_sqf_tools.doc_creating.creator import Creator
+from antistasi_sqf_tools.doc_creating.config_handling import CONFIG_FILE_NAME, find_config_file
+from antistasi_sqf_tools.utilities import main_dir_from_git
+# endregion [Imports]
+
+
 THIS_FILE_DIR = Path(__file__).parent.absolute()
 
 CLI_FILE_PATH_TYPUS = click.Path(exists=True, file_okay=True, dir_okay=False, resolve_path=True, path_type=Path)
+
+CLI_DIR_PATH_TYPUS = click.Path(exists=False, file_okay=False, dir_okay=True, resolve_path=True, path_type=Path)
 
 
 def add_doc_sub_group(top_group: click.Group):
@@ -70,3 +84,14 @@ def add_doc_sub_group(top_group: click.Group):
         CONSOLE.rule(style="bold bright_white")
         CONSOLE.rule(title="DONE", style="bold bright_green")
         CONSOLE.rule(style="bold bright_white")
+
+    @docs_cli.command()
+    @click.help_option("-h", "--help")
+    @click.argument("source-folder", required=True, type=CLI_DIR_PATH_TYPUS)
+    @click.argument("target-folder", required=True, type=CLI_DIR_PATH_TYPUS)
+    @click.pass_context
+    def setup(ctx: click.Context,
+              source_folder: Path,
+              target_folder: Path) -> None:
+
+        ...

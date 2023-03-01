@@ -1,8 +1,13 @@
+
+# region [Imports]
+
+# * Third Party Imports --------------------------------------------------------------------------------->
 import docutils
 from docutils import nodes
-from docutils.parsers.rst.states import Inliner
 from sphinx.writers.html5 import HTML5Translator
-import inspect
+from docutils.parsers.rst.states import Inliner
+
+# endregion [Imports]
 
 
 class strike_node(nodes.Inline, nodes.TextElement):

@@ -1,11 +1,16 @@
 
 # region [Imports]
-from docutils import nodes
-from docutils.parsers.rst.directives.admonitions import BaseAdmonition
+
+# * Standard Library Imports ---------------------------------------------------------------------------->
 from typing import TYPE_CHECKING
 
+# * Third Party Imports --------------------------------------------------------------------------------->
+from docutils import nodes
+from docutils.parsers.rst.directives.admonitions import BaseAdmonition
+
+# * Type-Checking Imports --------------------------------------------------------------------------------->
 if TYPE_CHECKING:
-    from sphinx.application import Sphinx as SphinxApp
+    pass
 
 # endregion [Imports]
 

@@ -1,15 +1,26 @@
-import os
-from antistasi_sqf_tools import __version__
-from pathlib import Path
-from typing import TYPE_CHECKING
-from sphinx.util.fileutil import copy_asset, copy_asset_file
-from .strike_role import strike_node, strike_role, html_visit_strike_node, html_depart_strike_node
-from .caveat_admonition import caveat, Caveat, visit_caveat_node, depart_caveat_node
-from .cards_as_label import register_cards_as_label
 
+# region [Imports]
+
+# * Standard Library Imports ---------------------------------------------------------------------------->
+from typing import TYPE_CHECKING
+from pathlib import Path
+
+# * Third Party Imports --------------------------------------------------------------------------------->
+from sphinx.util.fileutil import copy_asset
+
+# * Local Imports --------------------------------------------------------------------------------------->
+from antistasi_sqf_tools import __version__
+
+from .strike_role import strike_node, strike_role, html_visit_strike_node, html_depart_strike_node
+from .cards_as_label import register_cards_as_label
+from .caveat_admonition import Caveat, caveat, visit_caveat_node, depart_caveat_node
+
+
+# * Type-Checking Imports --------------------------------------------------------------------------------->
 if TYPE_CHECKING:
     from sphinx.application import Sphinx as SphinxApplication
-    from sphinx.config import Config as SphinxConfig
+
+# endregion [Imports]
 
 
 THIS_FILE_DIR = Path(__file__).parent.absolute()

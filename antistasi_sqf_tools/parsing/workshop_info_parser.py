@@ -62,33 +62,35 @@ python -m workshop_info_parser -f json 463939057
 
 # region [Imports]
 
-
+# * Standard Library Imports ---------------------------------------------------------------------------->
 import re
 import sys
-from time import sleep
 import random
+import argparse
+from enum import Enum, unique
+from time import sleep
+from typing import TYPE_CHECKING, Iterable, Optional
 from pathlib import Path
-
-from typing import TYPE_CHECKING, Optional, Iterable
-from enum import Enum, auto, unique
 from datetime import datetime, timezone, timedelta
 from functools import lru_cache
-from bs4 import BeautifulSoup
+
+# * Third Party Imports --------------------------------------------------------------------------------->
 import httpx
-
-from rich.console import Console as RichConsole, Group as RenderGroup
-
-import argparse
-from rich.rule import Rule
-from rich.markdown import Markdown
-from rich.panel import Panel
-from rich.table import Table
-from rich.text import Text as RenderText
-from rich.tree import Tree
-from rich.progress import track
-from rich.syntax import Syntax
+from bs4 import BeautifulSoup
 from rich import box
 from rich import traceback as rich_traceback
+from rich.rule import Rule
+from rich.text import Text as RenderText
+from rich.tree import Tree
+from rich.panel import Panel
+from rich.table import Table
+from rich.syntax import Syntax
+from rich.console import Group as RenderGroup
+from rich.console import Console as RichConsole
+from rich.markdown import Markdown
+from rich.progress import track
+
+# * Type-Checking Imports --------------------------------------------------------------------------------->
 if TYPE_CHECKING:
     ...
 
