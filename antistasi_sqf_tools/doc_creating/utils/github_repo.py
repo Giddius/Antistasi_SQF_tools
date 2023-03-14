@@ -27,7 +27,6 @@ from github.Commit import Commit
 from github.GitTree import GitTree
 from github.Repository import Repository
 
-load_dotenv("github.env")
 
 # endregion [Imports]
 
@@ -42,7 +41,7 @@ load_dotenv("github.env")
 # endregion [Logging]
 
 # region [Constants]
-
+load_dotenv("github.env")
 THIS_FILE_DIR = Path(__file__).parent.absolute()
 
 # endregion [Constants]
@@ -160,7 +159,7 @@ class GithubFile(GitHubItem):
 
     def get_content(self) -> str:
         with self.repo.download_semaphore:
-            with requests.get(self.download_url) as response:
+            with requests.get(self.download_url, timeout=None) as response:
                 return response.text
 
     def download(self, target_folder: Path) -> Path:

@@ -1,0 +1,102 @@
+
+# region [Imports]
+
+import os
+import sys
+from pathlib import Path
+
+sys.path.insert(0, os.path.abspath('.'))
+
+
+{% if info.package_name %}
+import {{ info.package_name }}
+{% endif %}
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    ...
+
+
+# endregion [Imports]
+
+# region [Constants]
+
+THIS_FILE_DIR = Path(__file__).parent.absolute()
+
+ORIGINAL_SOURCE_DIR = Path(os.getenv("ORIGINAL_DOC_SOURCE_DIR", None)).resolve() if os.getenv("ORIGINAL_DOC_SOURCE_DIR", None) is not None else THIS_FILE_DIR
+ORIGINAL_TARGET_DIR = Path(os.getenv("ORIGINAL_DOC_TARGET_DIR", None)).resolve() if os.getenv("ORIGINAL_DOC_TARGET_DIR", None) is not None else THIS_FILE_DIR.parent.joinpath("docs")
+
+# endregion [Constants]
+
+# region [Project_Info]
+
+project = '{{ info.pretty_project_name }}'
+copyright = '{{ info.pretty_author_name }}'
+author = '{{ info.pretty_author_name }}'
+release = {{ info.version or '0.0.0' }}
+
+
+{% if info.has_logo_image %}
+html_logo = "_images/app_logo.png"
+html_favicon = "_images/app_favicon.png"
+{% endif %}
+
+# endregion [Project_Info]
+
+# region [Sphinx_Settings]
+
+extensions = ['sphinxcontrib.mermaid',
+              'sphinx_inline_tabs',
+              'sphinx.ext.githubpages',
+              'sphinx_copybutton',
+              'sphinx_design',
+              'sphinx.ext.autosectionlabel',
+              'sphinx_issues',
+              'sphinx.ext.graphviz',
+              'antistasi_sqf_tools.doc_creating.sphinx_extensions']
+
+templates_path = ['_templates']
+
+html_static_path = ['_static']
+html_css_files = [
+    'css/extra_styling.css'
+]
+
+exclude_patterns = []
+
+
+# get available styles via `pygmentize -L styles`
+pygments_style = "monokai"
+
+
+# endregion [Sphinx_Settings]
+
+# region [Extension_Settings]
+
+
+autosectionlabel_prefix_document = True
+
+# endregion [Extension_Settings]
+
+# region [HTML_Output_Settings]
+
+html_show_sourcelink = False
+html_show_sphinx = False
+html_copy_source = False
+html_theme = 'furo'
+
+
+html_context = {{ "{" }}"base_css_name": html_theme{{ "}" }}
+
+rst_epilog = ""
+
+html_theme_options = {{ "{" }}"sidebarwidth": "10em",
+                      "light_css_variables": {{ "{" }}{{ "}" }},
+                      "dark_css_variables": {{ "{" }}{{ "}" }}{{ "}" }}
+
+# endregion [HTML_Output_Settings]
+
+# region [Setup]
+
+
+# endregion [Setup]

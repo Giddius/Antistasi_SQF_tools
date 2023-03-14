@@ -9,6 +9,7 @@ Soon.
 # * Standard Library Imports ---------------------------------------------------------------------------->
 import os
 import sys
+from typing import TextIO
 import json
 import pickle
 import platform
@@ -46,9 +47,9 @@ THIS_FILE_DIR = Path(__file__).parent.absolute()
 
 
 class StdOutModifier:
-    originial_std_out = sys.stdout
 
     def __init__(self) -> None:
+        self.originial_std_out: TextIO = None
         self.output_dir = None
 
     def set_output_dir(self, output_dir: Path):
@@ -56,20 +57,21 @@ class StdOutModifier:
 
     def write(self, s: str):
         if s.startswith("The HTML pages are in"):
-            self.__class__.originial_std_out.write(f"<original_text> {s.strip()!r}\n")
+            self.originial_std_out.write(f"<original_text> {s.strip()!r}\n")
             s = f"The HTML pages are in {self.output_dir.as_posix()!r}.\n"
 
-        self.__class__.originial_std_out.write(s)
+        self.originial_std_out.write(s)
 
     def __getattr__(self, name: str):
-        return getattr(self.__class__.originial_std_out, name)
+        return getattr(self.originial_std_out, name)
 
     def __enter__(self):
+        self.originial_std_out = sys.stdout
         sys.stdout = self
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        sys.stdout = self.__class__.originial_std_out
+        sys.stdout = self.originial_std_out
 
 
 def _each_part_alphabetical_length(in_label: str):

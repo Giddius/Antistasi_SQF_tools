@@ -4,6 +4,7 @@
 # * Standard Library Imports ---------------------------------------------------------------------------->
 import os
 import re
+import json
 import random
 from time import sleep
 from typing import TYPE_CHECKING, Optional, Callable, Union
@@ -18,6 +19,8 @@ from docutils.statemachine import StringList
 from sphinx.util import logging as sphinx_logging
 from sphinx.util import requests as sphinx_requests
 from sphinx.util.docutils import SphinxRole, SphinxDirective
+from sphinx.util.fileutil import copy_asset
+
 
 # * Local Imports --------------------------------------------------------------------------------------->
 from antistasi_sqf_tools import __version__
@@ -30,8 +33,6 @@ if sys.version_info >= (3, 11):
 else:
     from typing_extensions import Self
 # * Type-Checking Imports --------------------------------------------------------------------------------->
-
-
 
 
 if TYPE_CHECKING:
@@ -97,6 +98,8 @@ class ConfigHolder(dict):
 
 ConfigHolder._sub_value_map["external_link_default_target"] = ConfigHolder.handle_external_link_default_target
 
+CUSTOM_LINK_DISPLAY_NAME_REGEX: re.Pattern = re.compile(r"^(?P<link_name>.*)§§(?P<display_name>.*)§§$", re.MULTILINE)
+
 
 class FixedExternalLinkRole(SphinxRole):
     link_collection: FixedExternalLinkCollection = None
@@ -108,6 +111,22 @@ class FixedExternalLinkRole(SphinxRole):
         super().__init__()
         self.use_base_name_always = use_base_name_always
 
+    def _get_link_and_display_name(self, in_text: str) -> tuple["FixedExternalLink", str]:
+        in_text = in_text.strip()
+        match = CUSTOM_LINK_DISPLAY_NAME_REGEX.search(in_text)
+
+        if not match:
+
+            link = self.link_collection.get_link_by_name(in_text)
+            display_name = link.name if self.use_base_name_always is True else in_text
+
+        else:
+
+            link = self.link_collection.get_link_by_name(match.group("link_name").strip())
+            display_name = match.group("display_name").strip()
+
+        return link, display_name
+
     def __call__(self,
                  name: str,
                  rawtext: str,
@@ -118,8 +137,9 @@ class FixedExternalLinkRole(SphinxRole):
                  content: list[str] = None) -> tuple[list[nodes.Node], list[nodes.system_message]]:
 
         self.inliner = inliner
-        link = self.link_collection.get_link_by_name(text)
-        self.link_name = link.name if self.use_base_name_always is True else text
+        link, display_name = self._get_link_and_display_name(text)
+
+        self.link_name = display_name
         self.link_url = link.url
         self.target_value = link.target_attribute.html_value
         options = {"classes": ["link-collection-link"]} | (options or {})
@@ -138,42 +158,68 @@ class FixedExternalLinkRole(SphinxRole):
         return [node], []
 
 
+class FixedExternalLinkListItemNode(nodes.compound):
+    local_attributes = ("category_name", "")
 
-class ExternalLinkListItemNode(nodes.container):
-    pass
+    def __init__(self, category_name: str, *children, rawsource='', **attributes):
+        name_text = nodes.rubric(text=category_name, classes=["external-links-category-title"])
+        classes = ["external-links-list"]
+        if "classes" in attributes:
+            classes += attributes["classes"]
+
+        attributes = attributes | {"classes": classes}
+        super().__init__(rawsource, name_text, *children, **attributes)
+
+
+class FixedExternalLinkDescriptionContainer(nodes.container):
+    ...
+
 
 class FixedExternalLinkListDirective(SphinxDirective):
     has_content = False
 
     def run(self) -> list[nodes.Node]:
-        all_nodes = []
+
+        link_section = nodes.section(ids=["links"])
+        link_section.append(nodes.title(text="Links"))
+        self.add_name(link_section)
+
+        is_full_file = True
+        for sec in self.state.document.findall(nodes.section):
+
+            is_full_file = False
+            sec.append(link_section)
+            break
+
         for cat, links in FixedExternalLinkRole.link_collection.get_link_file_data():
-            cat_section = nodes.container(ids=[cat.name], classes=["sd-card", "sd-sphinx-override", "sd-mb-3", "sd-shadow-md"], names=[cat.name])
-            self.state.nested_parse(StringList([str(cat.pretty_name)]), 1, cat_section)
-
-            self.set_source_info(cat_section)
-            cat_def_list = nodes.definition_list(classes=[f"wurst_{cat.name}"])
-
+            cat_section = FixedExternalLinkListItemNode(category_name=cat.pretty_name)
+            list_node = nodes.bullet_list(classes=["external-links-sublist"])
             for link in links:
-                item = nodes.definition_list_item(classes=[f"wuff_{link.name}"])
-                term = nodes.term()
+                list_item = nodes.list_item()
+                paragraph = nodes.paragraph(classes=["external-links-name-paragraph"])
+                paragraph.append(nodes.reference(text=link.name, refuri=str(link.url)))
+                list_item.append(paragraph)
 
-                term.append(nodes.reference("", docutils.utils.unescape(str(link.name)), refuri=str(link.url)))
-                item.append(term)
-                definition = nodes.definition()
-                def_paragraph_1 = nodes.paragraph()
+                desc_container = FixedExternalLinkDescriptionContainer(classes=["externel-link-description-container"])
 
-                def_paragraph_1.append(nodes.Text(link.description or ""))
-                definition.append(def_paragraph_1)
+                paragraph_text = nodes.paragraph(classes=["external-link-description"])
+                if link.description:
+                    paragraph_text.append(nodes.Text(link.description))
+                    desc_container.append(paragraph_text)
+                list_item.append(desc_container)
 
-                item.append(definition)
-                cat_def_list.append(item)
+                list_node.append(list_item)
 
-            cat_section.append(cat_def_list)
+            cat_section.append(list_node)
 
-            all_nodes.append(cat_section)
+            link_section.append(cat_section)
+        if is_full_file is True:
+            return [link_section]
+        else:
+            return []
 
-        return all_nodes
+
+CUSTOM_STEAM_LINK_TITLE_REGEX: re.Pattern = re.compile(r"^(?P<steam_id>\d+)\s*(?P<display_name>.*)$", re.MULTILINE)
 
 
 class SteamLink(SphinxRole):
@@ -183,6 +229,7 @@ class SteamLink(SphinxRole):
     target_value: str
 
     resolved_title_cache: dict[str, str] = {}
+    storage_file: Path = None
 
     def __init__(self) -> None:
         super().__init__()
@@ -190,6 +237,7 @@ class SteamLink(SphinxRole):
         self.title_regex = re.compile(r"\<title\>(?P<raw_title>.*?)\</title\>")
 
     def get_title(self, full_url: str) -> Optional[str]:
+
         raw_title = None
         text = ""
         response = sphinx_requests.get(full_url, timeout=15)
@@ -204,6 +252,26 @@ class SteamLink(SphinxRole):
         if raw_title is not None:
             return raw_title.removeprefix("Steam Workshop::")
 
+    def _get_id_and_url_and_display_name(self, in_text: str) -> tuple[str, str, str]:
+        in_text = in_text.strip()
+        match = CUSTOM_STEAM_LINK_TITLE_REGEX.search(in_text)
+
+        if not match or not match.group("display_name"):
+            steam_id = in_text
+            full_url = self.base_url + steam_id
+            try:
+                display_name = self.__class__.resolved_title_cache[steam_id]
+            except KeyError:
+                display_name = self.get_title(full_url)
+                self.__class__.resolved_title_cache[steam_id] = display_name
+
+        else:
+            steam_id = match.group("steam_id").strip()
+            full_url = self.base_url + steam_id
+            display_name = match.group("display_name").strip()
+
+        return steam_id, full_url, display_name
+
     def __call__(self,
                  name: str,
                  rawtext: str,
@@ -215,14 +283,7 @@ class SteamLink(SphinxRole):
 
         self.inliner = inliner
 
-        self.workshop_id = text
-        self.workshop_url = self.base_url + self.workshop_id
-        try:
-            self.workshop_title = self.__class__.resolved_title_cache[self.workshop_id]
-        except KeyError:
-            self.workshop_title = self.get_title(self.workshop_url)
-
-            self.__class__.resolved_title_cache[self.workshop_id] = self.workshop_title
+        self.workshop_id, self.workshop_url, self.workshop_title = self._get_id_and_url_and_display_name(text)
 
         self.target_value = "_blank"
 
@@ -241,6 +302,24 @@ class SteamLink(SphinxRole):
 
         self.set_source_info(node)
         return [node], []
+
+    @classmethod
+    def load_stored_cache(cls) -> None:
+        if cls.storage_file is None:
+            data = {}
+
+        with cls.storage_file.open("r", encoding='utf-8', errors='ignore') as f:
+            data = json.load(f)
+
+        cls.resolved_title_cache = data
+
+    @classmethod
+    def dump_stored_cache(cls) -> None:
+        if cls.storage_file is None:
+            return
+
+        with cls.storage_file.open("w", encoding='utf-8', errors='ignore') as f:
+            json.dump(cls.resolved_title_cache, f, indent=4, default=str)
 
 
 def validate_steam_id(in_id: str) -> int:
@@ -289,6 +368,54 @@ def setup_link_collection(app: "SphinxApplication", config: "SphinxConfig"):
     FixedExternalLinkRole.link_collection = link_collection
 
 
+def setup_steam_links_storage(app: "SphinxApplication", config: "SphinxConfig"):
+    data_dir = Path(app.original_source_dir).resolve().joinpath("_data")
+
+    steam_links_storage_file = data_dir.joinpath("stored_steam_links.json")
+
+    if steam_links_storage_file.exists() is False:
+        with steam_links_storage_file.open("w", encoding='utf-8', errors='ignore') as f:
+            json.dump({}, f, indent=4, default=str)
+
+    SteamLink.storage_file = steam_links_storage_file
+
+    SteamLink.load_stored_cache()
+
+
+def visit_link_list_item(self, node: nodes.Node):
+    classes = "docutils"
+    attrs = {}
+
+    self.body.append(self.starttag(node, "div", CLASS=classes, **attrs))
+
+
+def depart_link_list_item(self, node: nodes.Node):
+    self.body.append("</div>\n")
+
+
+def visit_link_description_item(self, node: nodes.Node):
+    classes = "docutils"
+    attrs = {}
+
+    self.body.append(self.starttag(node, "div", CLASS=classes, **attrs))
+
+
+def depart_link_description_item(self, node: nodes.Node):
+    self.body.append("</div>\n")
+
+
+def add_style_sheet(app: "SphinxApplication", exc: Exception) -> None:
+
+    if exc is None and app.builder.format == 'html':
+        src = Path(__file__).parent.resolve().joinpath("external_links_style.css")
+        dst = Path(app.outdir).joinpath('_static').resolve()
+        copy_asset(str(src), str(dst))
+
+
+def steam_links_finishing(app: "SphinxApplication", exception: Exception) -> None:
+    SteamLink.dump_stored_cache()
+
+
 def setup(app: "SphinxApplication"):
     # app.add_config_value(EXTERNAL_LINK_FILE_CONFIG_NAME, None, '', types=[type(None), str, Path, WindowsPath, PurePath])
     # app.add_config_value(EXTERNAL_LINK_DEFAULT_TARGET_CONFIG_NAME, "NEW_TAP", '', types=[str])
@@ -299,12 +426,16 @@ def setup(app: "SphinxApplication"):
     app.add_role("la", FixedExternalLinkRole())
     app.add_role("l", FixedExternalLinkRole(use_base_name_always=True))
     app.add_role("steam", SteamLink())
-
+    app.add_node(FixedExternalLinkListItemNode, html=(visit_link_list_item, depart_link_list_item),)
+    app.add_node(FixedExternalLinkDescriptionContainer, html=(visit_link_description_item, depart_link_description_item))
     app.add_directive("linklist", FixedExternalLinkListDirective)
-
+    app.connect('build-finished', add_style_sheet)
     app.connect("config-inited", setup_link_collection)
-    # app.connect("builder-inited", handle_link_file)
+    app.connect("config-inited", setup_steam_links_storage)
+    app.connect("build-finished", steam_links_finishing)
 
+    # app.connect("builder-inited", handle_link_file)
+    app.add_css_file("external_links_style.css")
     return {
         "version": __version__,
         "parallel_read_safe": True,

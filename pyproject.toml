@@ -104,4 +104,7 @@ directory = "tools/reports/coverage/html"
 
 
 [tool.ruff]
-ignore = ["E501", "E402", "E731"]
+ignore = ["E501", "E402", "E731", "F401"]
+
+
+[tool.pyright]

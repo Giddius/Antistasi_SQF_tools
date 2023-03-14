@@ -68,7 +68,7 @@ class LinkTarget(Enum):
 
 class FixedExternalLink:
 
-    default_target_attribute: LinkTarget = LinkTarget.NEW_TAP
+    _default_target_attribute: LinkTarget = LinkTarget.NEW_TAP
 
     def __init__(self,
                  name: str,
@@ -78,12 +78,13 @@ class FixedExternalLink:
                  description: str = None,
                  target: Union[TARGET_STRING_TYPE, LinkTarget] = None,
                  flags: Iterable[str] = None) -> None:
+
         self.name = name
         self.url = URL(url)
         self.aliases: set[str] = set(aliases) if aliases else set()
         self.position = position
         self.description = description
-        self.target_attribute: Optional[LinkTarget] = LinkTarget(target) if target is not None else self.default_target_attribute
+        self.target_attribute: Optional[LinkTarget] = LinkTarget(target) if target is not None else self._default_target_attribute
         self.category: "FixedExternalLinkCategory" = None
         self.flags = set(flags) if flags is not None else set()
 
@@ -93,7 +94,7 @@ class FixedExternalLink:
 
     @classmethod
     def set_default_target_attribute(cls, target: Union[TARGET_STRING_TYPE, LinkTarget]) -> None:
-        cls.default_target_attribute = LinkTarget(target)
+        cls._default_target_attribute = LinkTarget(target)
 
     @property
     def raw_url(self) -> str:

@@ -3,7 +3,7 @@
 
 # * Standard Library Imports ---------------------------------------------------------------------------->
 import os
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeAlias
 from pathlib import Path
 
 # * Local Imports --------------------------------------------------------------------------------------->
@@ -16,11 +16,23 @@ from .links_collection import setup as links_collection_setup
 if TYPE_CHECKING:
     from sphinx.config import Config as SphinxConfig
     from sphinx.application import Sphinx as SphinxApplication
+    _SphinxApplication: TypeAlias = SphinxApplication
+    _SphinxConfig: TypeAlias = SphinxConfig
+
 
 # endregion [Imports]
 
 
-def on_config_inited(app: "SphinxApplication", config: "SphinxConfig") -> None:
+def on_config_inited(app: "_SphinxApplication", config: "_SphinxConfig") -> None:
+    """
+    Adds the original source-path and original target-path to the sphinx-app.
+
+    So those can be accessed even when building via `IsolatedBuildEnvironment`.
+
+    :type app: SphinxApplication
+
+    :type config: SphinxConfig
+    """
 
     original_source_dir = os.getenv("ORIGINAL_DOC_SOURCE_DIR", None)
     if original_source_dir is not None:

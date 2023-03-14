@@ -35,6 +35,7 @@ THIS_FILE_DIR = Path(__file__).parent.absolute()
 
 
 # endregion [Constants]
+
 class BaseGidEnum(Enum):
     @classmethod
     def _missing_(cls, value: object) -> Any:
@@ -92,7 +93,7 @@ STRING_CASE_FUNC_TYPE = Callable[[Iterable[str]], str]
 
 # TODO: Rewrite as normal class/Module-Singleton
 class _StringCaseConverter:
-    """ """
+
     SNAKE = StringCase.SNAKE
     SCREAMING_SNAKE = StringCase.SCREAMING_SNAKE
     CAMEL = StringCase.CAMEL
@@ -250,7 +251,7 @@ class _StringCaseConverter:
         """
         if clean_in_string is True:
             in_string = self.remove_bad_chars(in_string)
-        target_case = StringCase(target_case) if isinstance(target_case, str) else target_case
+        target_case = StringCase(target_case)
         word_list = self._to_word_list(in_string)
         return self.dispatch_table.get(target_case)(word_list)
 
