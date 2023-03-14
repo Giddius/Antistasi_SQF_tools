@@ -1,1 +1,0 @@
-sqf @ git+https://github.com/jokoho48/sqf

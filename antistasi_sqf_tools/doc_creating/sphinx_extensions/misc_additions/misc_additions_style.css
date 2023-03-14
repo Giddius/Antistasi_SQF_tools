@@ -1,0 +1,21 @@
+.strike {
+    text-decoration: line-through;
+}
+
+
+.caveat .admonition-title {
+    background-color: rgba(255, 0, 0, 0.35);
+    font-weight: 900;
+    font-size: 1.2rem;
+
+}
+
+
+.caveat {
+    border: 10px solid pink;
+    border-image: repeating-linear-gradient(-55deg,
+            #000,
+            #000 20px,
+            yellow 20px,
+            yellow 40px) 10;
+}

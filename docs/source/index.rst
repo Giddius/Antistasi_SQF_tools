@@ -1,27 +1,48 @@
-.. Antistasi documentation master file, created by
-   sphinx-quickstart on Fri Apr 15 19:40:49 2022.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
 
-Welcome to Antistasi's documentation!
-=====================================
+======================
+Antistasi Sqf Tools
+======================
 
-.. image:: /images/as_insignia.png
-   :width: 400
-   :alt: Alternative text
+
+
+.. image:: /_images/app_logo.png
+   :width: 600
+   :align: center
+
+
+Sub-Modules
+==============
 
 .. toctree::
-   :maxdepth: 4
-   :caption: Contents:
-
-   /raw_files/description
-   /raw_files/missions/missions_main
+   :glob:
+   :maxdepth: 1
 
 
-Indices and tables
-==================
-
-* :ref:`search`
+   /sub_modules/doc_creating/doc_creating_index
+   /sub_modules/config_creation/config_creation_index
+   /sub_modules/parsing/parsing_index
 
 
 
+
+
+
+.. toctree::
+   :glob:
+   :maxdepth: 2
+
+
+   /sphinx_extensions/sphinx_extensions_index
+
+
+
+
+
+.. toctree::
+   :glob:
+   :hidden:
+   :caption: Extras
+
+
+   /links
+   /glossary

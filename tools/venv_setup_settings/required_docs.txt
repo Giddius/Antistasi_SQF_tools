@@ -1,0 +1,10 @@
+sphinx
+sphinxcontrib-mermaid
+sphinxcontrib.fulltoc
+sphinx-copybutton
+sphinx-design
+sphinx-issues
+pygments-style-tomorrow
+pygments-style-tomorrow
+furo
+sphinx-inline-tabs

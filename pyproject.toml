@@ -7,19 +7,25 @@ name = "antistasi_sqf_tools"
 authors = [{ name = "antistasi_tools" }]
 classifiers = ["License :: OSI Approved :: MIT License"]
 license = { file = "LICENSE" }
-readme = "README.md"
+readme = { file = "README.rst", content-type = "text/markdown" }
 dynamic = ['version', 'description']
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
-    "sphinx>=4.5.0",
-    "gidapptools[rich]>=0.2.9"
+    "click>=8.1",
+    "pygithub>=1.55",
+    "pyparsing>=3.0",
+    "python-dotenv>=0.20",
+    "rich>=12.6.0",
+    "sphinx>=5.3.0",
+    "yarl>=1.8",
 ]
+
 
 [project.urls]
 Source = "https://github.com/Giddius/Antistasi_Logbook"
 
 [project.scripts]
-
+antistasi-sqf-tools = "antistasi_sqf_tools.__main__:antistasi_sqf_tools_cli"
 
 [project.optional-dependencies]
 
@@ -41,7 +47,7 @@ exclude = [
     ".favorites.json",
     ".venv",
     ".pytest_cache",
-    "__pycache__"
+    "__pycache__",
 ]
 
 [tool.autopep8]
@@ -74,7 +80,7 @@ sections = [
 indented_import_headings = false
 
 [tool.pytest.ini_options]
-addopts = "-rA -vv --durations=0 --capture=tee-sys --show-capture=all --color=auto --code-highlight=yes"
+addopts = "-rA -vv --durations=0 --capture=tee-sys --show-capture=all --color=auto --code-highlight=yes --cov=antistasi_sqf_tools --cov-report html --html-report=./tools/reports/pytest_report --title='PYTEST REPORT'"
 
 [tool.autoflake]
 # additional_imports=None
@@ -85,8 +91,20 @@ remove_unused_variables = false
 ignore_init_module_imports = false
 
 [tool.gid_tasks.imports_cleaner]
-exclude_globs = [
+exclude_globs = []
+exclude_init_files = false
+ignore_missing_import_section = false
 
-]
-exclude_init_files = true
-ignore_missing_import_section = true
+[tool.coverage.report]
+omit = ["**/__init__.py"]
+exclude_lines = ["if __name__ == .__main__.:", "def __rich__", "def __repr__"]
+
+[tool.coverage.html]
+directory = "tools/reports/coverage/html"
+
+
+[tool.ruff]
+ignore = ["E501", "E402", "E731", "F401"]
+
+
+[tool.pyright]
