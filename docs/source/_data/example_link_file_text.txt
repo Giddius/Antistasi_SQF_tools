@@ -1,0 +1,40 @@
+.. code:: json
+
+    [
+        {
+            "name": "Github Repo",
+            "url": "https://github.com/Giddius/Antistasi_Logbook",
+            "description": "Github repo of this Project",
+            "aliases": [
+                "repo"
+            ],
+            "category": "Documentation",
+            "flags": []
+        },
+        {
+            "name": "Antistasi Repo",
+            "url": "https://github.com/official-antistasi-community/A3-Antistasi",
+            "description": "Github repo of Antistasi Mod",
+            "aliases": [],
+            "category": "antistasi",
+            "position": 0
+        },
+        {
+            "name": "Antistasi Steam Page",
+            "url": "https://steamcommunity.com/id/OfficialAntiStasiCommunity/myworkshopfiles/",
+            "description": "Steam Page for the Antistasi Mod",
+            "aliases": [],
+            "category": "Antistasi",
+            "position": 1
+        },
+        {
+            "name": "Antistasi Community Discord",
+            "url": "https://discord.gg/antistasi",
+            "category": "Antistasi",
+            "description": "Invite to the Discord Guild of the Antistasi Community"
+        },
+        {
+            "name": "Biki",
+            "url": "https://community.bistudio.com/wiki/Main_Page"
+        }
+    ]
